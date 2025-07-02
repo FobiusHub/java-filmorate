@@ -16,11 +16,12 @@ import java.time.LocalDate;
 public class Film {
     private Long id;
     @NotBlank(message = "Название не может быть пустым")
-    @NotNull(message = "Название - обязательное поле")
     private String name;
     @Length(max = 200, message = "Максимальная длина описания - 200 символов")
+    @NotBlank(message = "Описание не может быть пустым")
     private String description;
+    @NotNull(message = "Дата релиза должна быть указана")
     private LocalDate releaseDate;
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
-    private Long duration;
+    private long duration;
 }

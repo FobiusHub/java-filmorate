@@ -86,22 +86,31 @@ public class FilmControllerTest {
 
     @Test
     public void putShouldNotApplyIfIdIsIncorrect() throws IOException, InterruptedException {
-        String jsonFilm = "{\"name\":\"someName\"}";
+        String jsonFilm = "{\"name\":\"someName\"," +
+                "\"description\":\"description\"," +
+                "\"releaseDate\":\"2000-10-10\"," +
+                "\"duration\":10}";
         sendRequest(jsonFilm, RequestMethod.POST);
 
-        String jsonFilmToChange = "{\"name\":\"newName\"}";
+        String jsonFilmToChange = "{\"name\":\"newName\"," +
+                "\"description\":\"newDescription\"," +
+                "\"releaseDate\":\"2010-10-10\"," +
+                "\"duration\":100}";
         sendRequest(jsonFilmToChange, RequestMethod.PUT);
 
-        jsonFilmToChange = "{\"id\":2, \"name\":\"someName\"}";
+        jsonFilmToChange = "{\"id\":2, \"name\":\"newName\"," +
+                "\"description\":\"newDescription\"," +
+                "\"releaseDate\":\"2010-10-10\"," +
+                "\"duration\":100}";
         sendRequest(jsonFilmToChange, RequestMethod.PUT);
 
         sendRequest(RequestMethod.GET);
 
         String expectedBody = "[{\"id\":1," +
                 "\"name\":\"someName\"," +
-                "\"description\":null," +
-                "\"releaseDate\":null," +
-                "\"duration\":null}]";
+                "\"description\":\"description\"," +
+                "\"releaseDate\":\"2000-10-10\"," +
+                "\"duration\":10}]";
 
         assertEquals(expectedBody, response.body());
     }

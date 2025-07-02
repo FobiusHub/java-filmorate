@@ -51,7 +51,10 @@ public class UserControllerTest {
 
     @Test
     public void ifNameIsNullOrBlankUseLoginForName() throws IOException, InterruptedException {
-        String jsonUser = "{\"email\":\"email@email.ru\", \"login\":\"Login\", \"name\":null}";
+        String jsonUser = "{\"email\":\"email@email.ru\", " +
+                "\"login\":\"Login\", " +
+                "\"name\":null, " +
+                "\"birthday\":\"1990-01-01\"}";
         sendRequest(jsonUser, RequestMethod.POST);
 
         assertEquals(200, response.statusCode());
@@ -87,13 +90,23 @@ public class UserControllerTest {
 
     @Test
     public void putShouldNotApplyIfIdIsIncorrect() throws IOException, InterruptedException {
-        String jsonUser = "{\"email\":\"email@email.ru\", \"login\":\"Login\"}";
+        String jsonUser = "{\"email\":\"email@email.ru\"," +
+                "\"login\":\"Login\"," +
+                "\"name\":\"Name\"," +
+                "\"birthday\":\"1990-01-01\"}";
         sendRequest(jsonUser, RequestMethod.POST);
 
-        String jsonUserToChange = "{\"email\":\"newemail@email.ru\", \"login\":\"Login\"}";
+        String jsonUserToChange = "{\"email\":\"newemail@email.ru\"," +
+                "\"login\":\"newLogin\"," +
+                "\"name\":\"newName\"," +
+                "\"birthday\":\"1992-01-01\"}";
         sendRequest(jsonUserToChange, RequestMethod.PUT);
 
-        jsonUserToChange = "{\"id\":2, \"email\":\"newemail@email.ru\", \"login\":\"Login\"}";
+        jsonUserToChange = "{\"id\":2," +
+                "\"email\":\"newemail@email.ru\"," +
+                "\"login\":\"newLogin\"," +
+                "\"name\":\"newName\"," +
+                "\"birthday\":\"1992-01-01\"}";
         sendRequest(jsonUserToChange, RequestMethod.PUT);
 
         sendRequest(RequestMethod.GET);
@@ -101,8 +114,8 @@ public class UserControllerTest {
         String expectedBody = "[{\"id\":1," +
                 "\"email\":\"email@email.ru\"," +
                 "\"login\":\"Login\"," +
-                "\"name\":\"Login\"," +
-                "\"birthday\":null}]";
+                "\"name\":\"Name\"," +
+                "\"birthday\":\"1990-01-01\"}]";
 
         assertEquals(expectedBody, response.body());
     }

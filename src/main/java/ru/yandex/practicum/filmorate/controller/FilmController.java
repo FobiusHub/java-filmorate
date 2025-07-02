@@ -22,12 +22,7 @@ public class FilmController {
     //добавление фильма
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
-        try {
-            validateFilmData(film);
-        } catch (ValidationException e) {
-            log.warn("При добавлении фильма возникла ошибка: {}", e.getMessage(), e);
-            throw e;
-        }
+        validateFilmData(film);
         film.setId(id);
         log.debug("Фильму {} присвоен id {}", film.getName(), id);
         id++;
@@ -38,13 +33,8 @@ public class FilmController {
     //обновление фильма
     @PutMapping
     public Film update(@Valid @RequestBody Film newFilmData) {
-        try {
-            validateFilmData(newFilmData);
-            return updateFilmData(newFilmData);
-        } catch (ValidationException | NotFoundException e) {
-            log.warn("При обновлении фильма возникла ошибка: {}", e.getMessage(), e);
-            throw e;
-        }
+        validateFilmData(newFilmData);
+        return updateFilmData(newFilmData);
     }
 
     //получение всех фильмов
@@ -55,7 +45,8 @@ public class FilmController {
 
     private void validateFilmData(Film film) {
         LocalDate releaseDate = film.getReleaseDate();
-        if (releaseDate != null && releaseDate.isBefore(LocalDate.of(1895, 12, 28))) {
+        if (releaseDate.isBefore(LocalDate.of(1895, 12, 28))) {
+            log.warn("При добавлении/обновлении фильма возникла ошибка: Дата релиза — не раньше 28 декабря 1895 года");
             throw new ValidationException("Дата релиза — не раньше 28 декабря 1895 года");
         }
     }
@@ -63,9 +54,11 @@ public class FilmController {
     private Film updateFilmData(Film newFilmData) {
         Long newFilmDataId = newFilmData.getId();
         if (newFilmDataId == null) {
+            log.warn("При обновлении фильма возникла ошибка: Необходимо указать ID");
             throw new ValidationException("Необходимо указать ID");
         }
         if (!films.containsKey(newFilmDataId)) {
+            log.warn("При обновлении фильма возникла ошибка: Фильм не найден");
             throw new NotFoundException("Фильм не найден");
         }
 
@@ -78,29 +71,26 @@ public class FilmController {
                 newFilmDataId, oldName, newName);
 
         String newFilmDescription = newFilmData.getDescription();
-        if (newFilmDescription != null && !newFilmDescription.isBlank()) {
-            String oldDescription = film.getDescription();
-            film.setDescription(newFilmDescription);
-            log.debug("Фильм id: {} - описание \"{}\" изменено на \"{}\"",
-                    newFilmDataId, oldDescription, newFilmDescription);
-        }
+
+        String oldDescription = film.getDescription();
+        film.setDescription(newFilmDescription);
+        log.debug("Фильм id: {} - описание \"{}\" изменено на \"{}\"",
+                newFilmDataId, oldDescription, newFilmDescription);
 
         LocalDate releaseDate = newFilmData.getReleaseDate();
-        if (releaseDate != null) {
-            String oldReleaseDate = film.getReleaseDate().toString();
-            String newReleaseDate = releaseDate.toString();
-            film.setReleaseDate(releaseDate);
-            log.debug("Фильм id: {} - дата релиза \"{}\" изменена на \"{}\"",
-                    newFilmDataId, oldReleaseDate, newReleaseDate);
-        }
 
-        Long duration = newFilmData.getDuration();
-        if (duration != null) {
-            Long oldDuration = film.getDuration();
-            film.setDuration(duration);
-            log.debug("Фильм id: {} - продолжительность \"{}\" изменена на \"{}\"",
-                    newFilmDataId, oldDuration, duration);
-        }
+        String oldReleaseDate = film.getReleaseDate().toString();
+        String newReleaseDate = releaseDate.toString();
+        film.setReleaseDate(releaseDate);
+        log.debug("Фильм id: {} - дата релиза \"{}\" изменена на \"{}\"",
+                newFilmDataId, oldReleaseDate, newReleaseDate);
+
+
+        long duration = newFilmData.getDuration();
+        long oldDuration = film.getDuration();
+        film.setDuration(duration);
+        log.debug("Фильм id: {} - продолжительность \"{}\" изменена на \"{}\"",
+                newFilmDataId, oldDuration, duration);
 
         return film;
     }

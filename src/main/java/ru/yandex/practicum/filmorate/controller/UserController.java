@@ -22,12 +22,8 @@ public class UserController {
     //создание пользователя
     @PostMapping
     public User create(@Valid @RequestBody User user) {
-        try {
-            validateUserData(user);
-        } catch (ValidationException e) {
-            log.warn("При добавлении пользователя возникла ошибка: {}", e.getMessage(), e);
-            throw e;
-        }
+        validateUserData(user);
+
         user.setId(id);
         log.debug("Пользователю {} присвоен id {}", user.getLogin(), id);
         id++;
@@ -44,13 +40,8 @@ public class UserController {
     //обновление пользователя
     @PutMapping
     public User update(@Valid @RequestBody User newUserData) {
-        try {
-            validateUserData(newUserData);
-            return updateUserData(newUserData);
-        } catch (ValidationException | NotFoundException e) {
-            log.warn("При обновлении данных пользователя возникла ошибка: {}", e.getMessage(), e);
-            throw e;
-        }
+        validateUserData(newUserData);
+        return updateUserData(newUserData);
     }
 
     //получение списка всех пользователей
@@ -62,6 +53,7 @@ public class UserController {
     private void validateUserData(User user) {
         String login = user.getLogin();
         if (login.contains(" ") || login.isBlank()) {
+            log.warn("При добавлении пользователя возникла ошибка: Логин не может быть пустым и содержать пробелы");
             throw new ValidationException("Логин не может быть пустым и содержать пробелы");
         }
     }
@@ -69,9 +61,11 @@ public class UserController {
     private User updateUserData(User newUserData) {
         Long newUserDataId = newUserData.getId();
         if (newUserDataId == null) {
+            log.warn("При обновлении данных пользователя возникла ошибка: Необходимо указать ID");
             throw new ValidationException("Необходимо указать ID");
         }
         if (!users.containsKey(newUserDataId)) {
+            log.warn("При обновлении данных пользователя возникла ошибка: Пользователь не найден");
             throw new NotFoundException("Пользователь не найден");
         }
 
@@ -84,12 +78,11 @@ public class UserController {
                 newUserDataId, oldEmail, newEmail);
 
         String newLogin = newUserData.getLogin();
-        if (!newLogin.isBlank()) {
-            String oldLogin = user.getLogin();
-            user.setLogin(newLogin);
-            log.debug("Пользователь id: {} - логин \"{}\" изменен на \"{}\"",
-                    newUserDataId, oldLogin, newLogin);
-        }
+
+        String oldLogin = user.getLogin();
+        user.setLogin(newLogin);
+        log.debug("Пользователь id: {} - логин \"{}\" изменен на \"{}\"",
+                newUserDataId, oldLogin, newLogin);
 
         String newName = newUserData.getName();
         if (newName != null && !newName.isBlank()) {
@@ -100,12 +93,11 @@ public class UserController {
         }
 
         LocalDate newBirthday = newUserData.getBirthday();
-        if (newBirthday != null) {
-            LocalDate oldBirthday = user.getBirthday();
-            user.setBirthday(newBirthday);
-            log.debug("Пользователь id: {} - дата рождения \"{}\" изменена на \"{}\"",
-                    newUserDataId, oldBirthday, newBirthday);
-        }
+
+        LocalDate oldBirthday = user.getBirthday();
+        user.setBirthday(newBirthday);
+        log.debug("Пользователь id: {} - дата рождения \"{}\" изменена на \"{}\"",
+                newUserDataId, oldBirthday, newBirthday);
 
         return user;
     }

@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -68,37 +67,7 @@ public class UserController {
             log.warn("При обновлении данных пользователя возникла ошибка: Пользователь не найден");
             throw new NotFoundException("Пользователь не найден");
         }
-
-        User user = users.get(newUserDataId);
-
-        String oldEmail = user.getEmail();
-        String newEmail = newUserData.getEmail();
-        user.setEmail(newEmail);
-        log.debug("Пользователь id: {} - email \"{}\" изменен на \"{}\"",
-                newUserDataId, oldEmail, newEmail);
-
-        String newLogin = newUserData.getLogin();
-
-        String oldLogin = user.getLogin();
-        user.setLogin(newLogin);
-        log.debug("Пользователь id: {} - логин \"{}\" изменен на \"{}\"",
-                newUserDataId, oldLogin, newLogin);
-
-        String newName = newUserData.getName();
-        if (newName != null && !newName.isBlank()) {
-            String oldName = user.getName();
-            user.setName(newName);
-            log.debug("Пользователь id: {} - имя \"{}\" изменено на \"{}\"",
-                    newUserDataId, oldName, newName);
-        }
-
-        LocalDate newBirthday = newUserData.getBirthday();
-
-        LocalDate oldBirthday = user.getBirthday();
-        user.setBirthday(newBirthday);
-        log.debug("Пользователь id: {} - дата рождения \"{}\" изменена на \"{}\"",
-                newUserDataId, oldBirthday, newBirthday);
-
-        return user;
+        users.put(newUserData.getId(), newUserData);
+        return newUserData;
     }
 }

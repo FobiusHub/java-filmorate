@@ -61,37 +61,7 @@ public class FilmController {
             log.warn("При обновлении фильма возникла ошибка: Фильм не найден");
             throw new NotFoundException("Фильм не найден");
         }
-
-        Film film = films.get(newFilmDataId);
-
-        String oldName = film.getName();
-        String newName = newFilmData.getName();
-        film.setName(newName);
-        log.debug("Фильм id: {} - название \"{}\" изменено на \"{}\"",
-                newFilmDataId, oldName, newName);
-
-        String newFilmDescription = newFilmData.getDescription();
-
-        String oldDescription = film.getDescription();
-        film.setDescription(newFilmDescription);
-        log.debug("Фильм id: {} - описание \"{}\" изменено на \"{}\"",
-                newFilmDataId, oldDescription, newFilmDescription);
-
-        LocalDate releaseDate = newFilmData.getReleaseDate();
-
-        String oldReleaseDate = film.getReleaseDate().toString();
-        String newReleaseDate = releaseDate.toString();
-        film.setReleaseDate(releaseDate);
-        log.debug("Фильм id: {} - дата релиза \"{}\" изменена на \"{}\"",
-                newFilmDataId, oldReleaseDate, newReleaseDate);
-
-
-        long duration = newFilmData.getDuration();
-        long oldDuration = film.getDuration();
-        film.setDuration(duration);
-        log.debug("Фильм id: {} - продолжительность \"{}\" изменена на \"{}\"",
-                newFilmDataId, oldDuration, duration);
-
-        return film;
+        films.put(newFilmData.getId(), newFilmData);
+        return newFilmData;
     }
 }

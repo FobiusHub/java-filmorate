@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @EqualsAndHashCode(of = {"name", "releaseDate", "duration"})
@@ -24,4 +26,17 @@ public class Film {
     private LocalDate releaseDate;
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     private long duration;
+    private final Set<Long> likes = new HashSet<>();
+
+    public void like(long filmId) {
+        likes.add(filmId);
+    }
+
+    public void removeLike(long filmId) {
+        likes.remove(filmId);
+    }
+
+    public int getLikesCount() {
+        return likes.size();
+    }
 }

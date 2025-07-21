@@ -1,67 +1,54 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
-import java.time.LocalDate;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/films")
 public class FilmController {
-    private long id = 1;
-    private final Map<Long, Film> films = new HashMap<>();
+    private final FilmService filmService;
 
-    //добавление фильма
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
-        validateFilmData(film);
-        film.setId(id);
-        log.debug("Фильму {} присвоен id {}", film.getName(), id);
-        id++;
-        films.put(film.getId(), film);
-        return film;
+        return filmService.create(film);
     }
 
-    //обновление фильма
     @PutMapping
     public Film update(@Valid @RequestBody Film newFilmData) {
-        validateFilmData(newFilmData);
-        return updateFilmData(newFilmData);
+        filmService.update(newFilmData);
+        return  newFilmData;
     }
 
-    //получение всех фильмов
     @GetMapping
-    public Collection<Film> findAll() {
-        return films.values();
+    public List<Film> findAll() {
+        return filmService.getAll();
     }
 
-    private void validateFilmData(Film film) {
-        LocalDate releaseDate = film.getReleaseDate();
-        if (releaseDate.isBefore(LocalDate.of(1895, 12, 28))) {
-            log.warn("При добавлении/обновлении фильма возникла ошибка: Дата релиза — не раньше 28 декабря 1895 года");
-            throw new ValidationException("Дата релиза — не раньше 28 декабря 1895 года");
-        }
+    @GetMapping("{id}")
+    public Film getFilm(@PathVariable long id) {
+        return filmService.getFilm(id);
     }
 
-    private Film updateFilmData(Film newFilmData) {
-        Long newFilmDataId = newFilmData.getId();
-        if (newFilmDataId == null) {
-            log.warn("При обновлении фильма возникла ошибка: Необходимо указать ID");
-            throw new ValidationException("Необходимо указать ID");
-        }
-        if (!films.containsKey(newFilmDataId)) {
-            log.warn("При обновлении фильма возникла ошибка: Фильм не найден");
-            throw new NotFoundException("Фильм не найден");
-        }
-        films.put(newFilmData.getId(), newFilmData);
-        return newFilmData;
+    @PutMapping("/{id}/like/{userId}")
+    public void like(@PathVariable long id, @PathVariable long userId) {
+        filmService.like(id, userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public void removeLike(@PathVariable long id, @PathVariable long userId) {
+        filmService.removeLike(id, userId);
+    }
+
+    @GetMapping("/popular")
+    public List<Film> getTopFilms(@RequestParam(defaultValue = "10") long count) {
+        return filmService.getTopFilms(count);
     }
 }

@@ -79,7 +79,9 @@ public class FilmControllerTest {
                 "\"name\":\"someName\"," +
                 "\"description\":\"someDescription\"," +
                 "\"releaseDate\":\"2000-10-10\"," +
-                "\"duration\":20}";
+                "\"duration\":20," +
+                "\"likes\":[]," +
+                "\"likesCount\":0}";
 
         assertEquals(expectedBody, response.body());
     }
@@ -110,7 +112,9 @@ public class FilmControllerTest {
                 "\"name\":\"someName\"," +
                 "\"description\":\"description\"," +
                 "\"releaseDate\":\"2000-10-10\"," +
-                "\"duration\":10}]";
+                "\"duration\":10," +
+                "\"likes\":[]," +
+                "\"likesCount\":0}]";
 
         assertEquals(expectedBody, response.body());
     }
@@ -127,7 +131,9 @@ public class FilmControllerTest {
                 "\"name\":\"anotherName\"," +
                 "\"description\":\"anotherDescription\"," +
                 "\"releaseDate\":\"2011-11-11\"," +
-                "\"duration\":200}";
+                "\"duration\":200," +
+                "\"likes\":[]," +
+                "\"likesCount\":0}";
         sendRequest(filmToChange, RequestMethod.PUT);
 
         assertEquals(filmToChange, response.body());

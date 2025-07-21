@@ -83,7 +83,8 @@ public class UserControllerTest {
                 "\"email\":\"email@email.ru\"," +
                 "\"login\":\"Login\"," +
                 "\"name\":\"name\"," +
-                "\"birthday\":\"1990-01-01\"}";
+                "\"birthday\":\"1990-01-01\"," +
+                "\"friends\":[]}";
 
         assertEquals(expectedBody, response.body());
     }
@@ -115,7 +116,8 @@ public class UserControllerTest {
                 "\"email\":\"email@email.ru\"," +
                 "\"login\":\"Login\"," +
                 "\"name\":\"Name\"," +
-                "\"birthday\":\"1990-01-01\"}]";
+                "\"birthday\":\"1990-01-01\"," +
+                "\"friends\":[]}]";
 
         assertEquals(expectedBody, response.body());
     }
@@ -132,7 +134,8 @@ public class UserControllerTest {
                 "\"email\":\"newemail@email.ru\"," +
                 "\"login\":\"newLogin\"," +
                 "\"name\":\"newname\"," +
-                "\"birthday\":\"2020-01-01\"}";
+                "\"birthday\":\"2020-01-01\"," +
+                "\"friends\":[]}";
         sendRequest(userToChange, RequestMethod.PUT);
 
         assertEquals(userToChange, response.body());

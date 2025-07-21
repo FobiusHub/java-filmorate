@@ -20,12 +20,6 @@ public class InMemoryUserStorage implements UserStorage {
         user.setId(id);
         log.debug("Пользователю {} присвоен id {}", user.getLogin(), id);
         id++;
-        String name = user.getName();
-        if (name == null || name.isBlank()) {
-            String login = user.getLogin();
-            user.setName(login);
-            log.debug("Имя пользователя не указано. В качестве имени присвоен логин {}.", login);
-        }
         users.put(user.getId(), user);
         return user;
     }

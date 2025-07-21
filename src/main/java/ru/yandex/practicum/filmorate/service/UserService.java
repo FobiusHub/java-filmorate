@@ -18,7 +18,7 @@ public class UserService {
     private final UserStorage userStorage;
 
     public User create(User user) {
-        validateUserData(user);
+        checkName(user);
         return userStorage.add(user);
     }
 
@@ -32,7 +32,7 @@ public class UserService {
             log.warn("При обновлении данных пользователя возникла ошибка: Пользователь не найден");
             throw new NotFoundException("Пользователь " + newUserDataId + " не найден");
         }
-        validateUserData(newUserData);
+        checkName(newUserData);
         userStorage.update(newUserData);
     }
 
@@ -87,18 +87,19 @@ public class UserService {
                 .toList();
     }
 
-    private void validateUserData(User user) {
-        String login = user.getLogin();
-        if (login.contains(" ") || login.isBlank()) {
-            log.warn("При добавлении пользователя возникла ошибка: Логин не может быть пустым и содержать пробелы");
-            throw new ValidationException("Логин не может быть пустым и содержать пробелы");
-        }
-    }
-
     public void validateUserExists(long id) {
         if (!userStorage.exists(id)) {
             log.warn("При запросе данных пользователя возникла ошибка: Пользователь не найден");
             throw new NotFoundException("Пользователь " + id + " не найден");
+        }
+    }
+
+    private void checkName(User user) {
+        String name = user.getName();
+        if (name == null || name.isBlank()) {
+            String login = user.getLogin();
+            user.setName(login);
+            log.debug("Имя пользователя не указано. В качестве имени присвоен логин {}.", login);
         }
     }
 }

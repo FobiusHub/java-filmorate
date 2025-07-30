@@ -28,6 +28,9 @@ public class Film {
     private long duration;
     private final Set<Long> likes = new HashSet<>();
 
+    private final Set<String> genres = new HashSet<>();
+    private Rating rating;
+
     public void like(long filmId) {
         likes.add(filmId);
     }

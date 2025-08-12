@@ -23,7 +23,7 @@ public class User {
     @Past(message = "Дата рождения не может быть в будущем")
     @NotNull(message = "Необходимо указать дату рождения")
     private LocalDate birthday;
-    private final Map<Long, Boolean> friends = new HashMap<>();
+    private final List<Long> friends = new ArrayList<>();
 
     public void addFriend(long friendId) {
         friends.add(friendId);

@@ -28,18 +28,22 @@ public class Film {
     private long duration;
     private final Set<Long> likes = new HashSet<>();
 
-    private final Set<String> genres = new HashSet<>();
-    private Rating rating;
+    private final Set<Genre> genres = new HashSet<>();
+    private Mpa mpa;
 
-    public void like(long filmId) {
-        likes.add(filmId);
+    public void like(long userId) {
+        likes.add(userId);
     }
 
-    public void removeLike(long filmId) {
-        likes.remove(filmId);
+    public void removeLike(long userId) {
+        likes.remove(userId);
     }
 
     public int getLikesCount() {
         return likes.size();
+    }
+
+    public void addGenre(Genre genre) {
+        genres.add(genre);
     }
 }

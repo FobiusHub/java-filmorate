@@ -13,7 +13,6 @@ import ru.yandex.practicum.filmorate.repository.mpa.MpaStorage;
 import ru.yandex.practicum.filmorate.repository.user.UserStorage;
 
 import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -78,10 +77,7 @@ public class FilmService {
     }
 
     public List<Film> getTopFilms(long size) {
-        return filmStorage.getAll().stream()
-                .sorted(Comparator.comparing(Film::getLikesCount).reversed())
-                .limit(size)
-                .toList();
+        return filmStorage.getTopFilms(size);
     }
 
     private void validateFilmData(Film film) {

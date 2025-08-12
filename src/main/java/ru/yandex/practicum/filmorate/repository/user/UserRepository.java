@@ -26,6 +26,8 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     private static final String FIND_ALL_QUERY = "SELECT * FROM users";
     private static final String IS_EXIST_QUERY = "SELECT COUNT(*) FROM users WHERE user_id = ?";
     private static final String GET_FRIENDS_QUERY = "SELECT friend_id FROM friends WHERE user_id = ?";
+    private static final String COMMON_FRIENDS_QUERY = "SELECT * FROM users u, friends f, friends o " +
+            "WHERE u.user_id = f.friend_id AND u.user_id = o.friend_id AND f.user_id = ? AND o.user_id = ?";
 
     public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
@@ -102,6 +104,16 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     @Override
     public void removeFriend(long userId, long friendId) {
         jdbc.update(REMOVE_FRIEND_QUERY, userId, friendId);
+    }
+
+    @Override
+    public List<Long> getFriends(long userId) {
+        return jdbc.queryForList(GET_FRIENDS_QUERY, Long.class, userId);
+    }
+
+    @Override
+    public List<User> getCommonFriends(long userId, long otherId) {
+        return findMany(COMMON_FRIENDS_QUERY, userId, otherId);
     }
 
     private void setFriends(User user) {

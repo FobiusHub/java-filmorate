@@ -75,13 +75,7 @@ public class UserService {
     }
 
     public List<User> getCommonFriends(long userId, long otherId) {
-        List<Long> userFriends = userStorage.get(userId).getFriends();
-        List<Long> anotherUserFriends = userStorage.get(otherId).getFriends();
-
-        return userFriends.stream()
-                .filter(anotherUserFriends::contains)
-                .map(userStorage::get)
-                .toList();
+        return userStorage.getCommonFriends(userId, otherId);
     }
 
     private void checkName(User user) {

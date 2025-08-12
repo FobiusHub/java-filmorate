@@ -38,7 +38,7 @@ public class UserRepositoryTest {
         user.setLogin("login123");
         user.setName("someName");
         user.setBirthday(LocalDate.of(2000, 10, 12));
-        user = userStorage.add(user);
+        userStorage.add(user);
 
         user2 = new User();
         user2.setEmail("123@gmail.ru");
@@ -112,9 +112,9 @@ public class UserRepositoryTest {
     @Test
     public void shouldAddFriend() {
         user.addFriend(user2.getId());
-        userStorage.addFriend(1, 2);
+        userStorage.addFriend(user.getId(), user2.getId());
 
-        User user3 = userStorage.get(1);
+        User user3 = userStorage.get(user.getId());
         assertThat(user)
                 .usingRecursiveComparison()
                 .isEqualTo(user3);
@@ -131,5 +131,44 @@ public class UserRepositoryTest {
         assertThat(user)
                 .usingRecursiveComparison()
                 .isEqualTo(user3);
+    }
+
+    @Test
+    public void shouldReturnAllFriends() {
+        List<Long> user2Friends = user2.getFriends();
+        List<Long> friendsDb = userStorage.getFriends(user2.getId());
+
+        assertThat(user2Friends)
+                .usingRecursiveComparison()
+                .isEqualTo(friendsDb);
+    }
+
+    @Test
+    public void shouldReturnCommonFriends() {
+        User user3 = new User();
+        user3.setEmail("mail@mailmail.ru");
+        user3.setLogin("login123456");
+        user3.setName("someName6");
+        user3.setBirthday(LocalDate.of(1990, 10, 12));
+        user3.addFriend(user.getId());
+        user3.addFriend(user2.getId());
+        userStorage.add(user3);
+
+        User user4 = new User();
+        user4.setEmail("somemail@gmail.ru");
+        user4.setLogin("logogoggin");
+        user4.setName("someName5");
+        user4.setBirthday(LocalDate.of(2007, 10, 12));
+        user4.addFriend(user.getId());
+        user4.addFriend(user3.getId());
+        userStorage.add(user4);
+
+        List<User> friends = userStorage.getCommonFriends(user3.getId(), user4.getId());
+
+        assertTrue(friends.size() == 1);
+
+        assertThat(user)
+                .usingRecursiveComparison()
+                .isEqualTo(friends.getFirst());
     }
 }

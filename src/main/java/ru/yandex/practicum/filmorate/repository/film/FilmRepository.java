@@ -21,7 +21,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private static final String INSERT_QUERY = "INSERT INTO films(name, description, release_date, duration)" +
             "VALUES (?, ?, ?, ?)";
     private static final String INSERT_LIKES_QUERY = "INSERT INTO likes(film_id, user_id) VALUES (?, ?)";
-    private static final String REMOVE_LIKES_QUERY = "DELETE FROM likes WHERE film_id = ?";
     private static final String INSERT_GENRES_QUERY = "INSERT INTO film_genres(film_id, genre_id) VALUES (?, ?)";
     private static final String REMOVE_GENRES_QUERY = "DELETE FROM film_genres WHERE film_id = ?";
     private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?, " +
@@ -57,7 +56,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         if (mpa != null) {
             jdbc.update("UPDATE films SET mpa_id = ? WHERE film_id = ?", mpa.getId(), id);
         }
-        addMany(INSERT_LIKES_QUERY, id, film.getLikes().stream().toList());
         List<Long> genres = film.getGenres().stream()
                 .map(Genre::getId)
                 .toList();
@@ -78,9 +76,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                 film.getMpa().getId(),
                 id
         );
-
-        delete(REMOVE_LIKES_QUERY, id);
-        addMany(INSERT_LIKES_QUERY, id, film.getLikes().stream().toList());
 
         delete(REMOVE_GENRES_QUERY, id);
         addMany(INSERT_GENRES_QUERY, id, film.getGenres().stream().map(Genre::getId).toList());

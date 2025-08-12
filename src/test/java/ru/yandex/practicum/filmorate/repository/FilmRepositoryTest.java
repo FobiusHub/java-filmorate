@@ -71,8 +71,6 @@ public class FilmRepositoryTest {
         film.setReleaseDate(LocalDate.of(2005, 10, 12));
         film.setDuration(120);
         film.setMpa(mpaStorage.get(1));
-        film.like(user.getId());
-        film.like(user2.getId());
         film.addGenre(genreStorage.get(1));
         film.addGenre(genreStorage.get(2));
         filmStorage.add(film);

@@ -1,21 +1,26 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.repository.user.UserStorage;
 
 import java.util.List;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class UserService {
     private final UserStorage userStorage;
+
+    @Autowired
+    public UserService(@Qualifier("userDb") UserStorage userStorage) {
+        this.userStorage = userStorage;
+    }
 
     public User create(User user) {
         checkName(user);
@@ -41,57 +46,45 @@ public class UserService {
     }
 
     public User getUser(long id) {
-        validateUserExists(id);
         return userStorage.get(id);
     }
 
     public void addFriend(long userId, long friendId) {
-        validateUserExists(userId);
-        validateUserExists(friendId);
-
         User user = userStorage.get(userId);
-        User anotherUser = userStorage.get(friendId);
-
-        user.addFriend(friendId);
-        anotherUser.addFriend(userId);
+        if (!userStorage.exists(friendId)) {
+            log.warn("При запросе данных пользователя возникла ошибка: Пользователь не найден");
+            throw new NotFoundException("Пользователь " + friendId + " не найден");
+        }
+        userStorage.addFriend(userId, friendId);
     }
 
     public void removeFriend(long userId, long friendId) {
-        validateUserExists(userId);
-        validateUserExists(friendId);
-
         User user = userStorage.get(userId);
-        User anotherUser = userStorage.get(friendId);
-
-        user.removeFriend(friendId);
-        anotherUser.removeFriend(userId);
+        if (!userStorage.exists(friendId)) {
+            log.warn("При запросе данных пользователя возникла ошибка: Пользователь не найден");
+            throw new NotFoundException("Пользователь " + friendId + " не найден");
+        }
+        userStorage.removeFriend(userId, friendId);
     }
 
     public List<User> getFriends(long id) {
-        validateUserExists(id);
-        return userStorage.get(id).getFriends().stream()
-                .map(userStorage::get)
-                .toList();
-    }
-
-    public List<User> getCommonFriends(long userId, long otherId) {
-        validateUserExists(userId);
-        validateUserExists(otherId);
-
-        List<Long> userFriends = userStorage.get(userId).getFriends();
-        List<Long> anotherUserFriends = userStorage.get(otherId).getFriends();
-
-        return userFriends.stream()
-                .filter(anotherUserFriends::contains)
-                .map(userStorage::get)
-                .toList();
-    }
-
-    public void validateUserExists(long id) {
         if (!userStorage.exists(id)) {
             log.warn("При запросе данных пользователя возникла ошибка: Пользователь не найден");
             throw new NotFoundException("Пользователь " + id + " не найден");
         }
+        return userStorage.getFriends(id);
+    }
+
+    public List<User> getCommonFriends(long userId, long otherId) {
+        if (!userStorage.exists(userId)) {
+            log.warn("При запросе данных пользователя возникла ошибка: Пользователь не найден");
+            throw new NotFoundException("Пользователь " + userId + " не найден");
+        }
+        if (!userStorage.exists(otherId)) {
+            log.warn("При запросе данных пользователя возникла ошибка: Пользователь не найден");
+            throw new NotFoundException("Пользователь " + otherId + " не найден");
+        }
+        return userStorage.getCommonFriends(userId, otherId);
     }
 
     private void checkName(User user) {

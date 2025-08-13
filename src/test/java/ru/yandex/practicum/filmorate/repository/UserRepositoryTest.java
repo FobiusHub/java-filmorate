@@ -136,7 +136,7 @@ public class UserRepositoryTest {
     @Test
     public void shouldReturnAllFriends() {
         List<Long> user2Friends = user2.getFriends();
-        List<Long> friendsDb = userStorage.getFriends(user2.getId());
+        List<Long> friendsDb = userStorage.getFriends(user2.getId()).stream().map(User::getId).toList();
 
         assertThat(user2Friends)
                 .usingRecursiveComparison()

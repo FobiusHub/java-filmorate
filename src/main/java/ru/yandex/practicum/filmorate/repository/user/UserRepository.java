@@ -25,7 +25,8 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM users WHERE user_id = ?";
     private static final String FIND_ALL_QUERY = "SELECT * FROM users";
     private static final String IS_EXIST_QUERY = "SELECT COUNT(*) FROM users WHERE user_id = ?";
-    private static final String GET_FRIENDS_QUERY = "SELECT friend_id FROM friends WHERE user_id = ?";
+    private static final String GET_FRIENDS_QUERY = "SELECT * FROM users AS u JOIN friends AS f " +
+            "ON u.user_id = f.friend_id WHERE f.user_id = ?";
     private static final String COMMON_FRIENDS_QUERY = "SELECT * FROM users u, friends f, friends o " +
             "WHERE u.user_id = f.friend_id AND u.user_id = o.friend_id AND f.user_id = ? AND o.user_id = ?";
 
@@ -107,8 +108,8 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     }
 
     @Override
-    public List<Long> getFriends(long userId) {
-        return jdbc.queryForList(GET_FRIENDS_QUERY, Long.class, userId);
+    public List<User> getFriends(long userId) {
+        return findMany(GET_FRIENDS_QUERY, userId);
     }
 
     @Override
@@ -117,9 +118,9 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     }
 
     private void setFriends(User user) {
-        List<Long> friends = jdbc.queryForList(GET_FRIENDS_QUERY, Long.class, user.getId());
-        for (Long friendId : friends) {
-            user.addFriend(friendId);
+        List<User> friends = findMany(GET_FRIENDS_QUERY, user.getId());
+        for (User friend : friends) {
+            user.addFriend(friend.getId());
         }
     }
 }

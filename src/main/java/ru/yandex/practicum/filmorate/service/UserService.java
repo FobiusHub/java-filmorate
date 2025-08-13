@@ -68,10 +68,7 @@ public class UserService {
     }
 
     public List<User> getFriends(long id) {
-        User user = userStorage.get(id);
-        return user.getFriends().stream()
-                .map(userStorage::get)
-                .toList();
+        return userStorage.getFriends(id);
     }
 
     public List<User> getCommonFriends(long userId, long otherId) {

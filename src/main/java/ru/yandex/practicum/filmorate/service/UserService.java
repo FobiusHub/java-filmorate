@@ -68,10 +68,22 @@ public class UserService {
     }
 
     public List<User> getFriends(long id) {
+        if (!userStorage.exists(id)) {
+            log.warn("При запросе данных пользователя возникла ошибка: Пользователь не найден");
+            throw new NotFoundException("Пользователь " + id + " не найден");
+        }
         return userStorage.getFriends(id);
     }
 
     public List<User> getCommonFriends(long userId, long otherId) {
+        if (!userStorage.exists(userId)) {
+            log.warn("При запросе данных пользователя возникла ошибка: Пользователь не найден");
+            throw new NotFoundException("Пользователь " + userId + " не найден");
+        }
+        if (!userStorage.exists(otherId)) {
+            log.warn("При запросе данных пользователя возникла ошибка: Пользователь не найден");
+            throw new NotFoundException("Пользователь " + otherId + " не найден");
+        }
         return userStorage.getCommonFriends(userId, otherId);
     }
 

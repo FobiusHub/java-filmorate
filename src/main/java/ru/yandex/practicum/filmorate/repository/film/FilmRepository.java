@@ -41,7 +41,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private static final String TOP_QUERY = "SELECT f.*, COUNT(l.user_id) FROM films AS f LEFT JOIN likes AS l ON " +
             "f.film_id = l.film_id GROUP BY f.film_id ORDER BY COUNT(l.user_id) DESC LIMIT ?";
     private static final String GET_LIKES_QUERY = "SELECT user_id FROM likes WHERE film_id = ?";
-    private static final String DIRECTOR_FILMS_LIKES_QUERY = "SELECT f.* FROM films AS f "+
+    private static final String DIRECTOR_FILMS_LIKES_QUERY = "SELECT f.* FROM films AS f " +
             "JOIN film_directors AS fd ON fd.film_id = f.film_id " +
             "LEFT JOIN likes AS l ON f.film_id = l.film_id " +
             "WHERE fd.director_id = ? GROUP BY f.film_id ORDER BY COUNT(l.user_id) DESC";

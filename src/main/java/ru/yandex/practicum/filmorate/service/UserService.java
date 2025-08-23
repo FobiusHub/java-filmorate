@@ -87,6 +87,12 @@ public class UserService {
         return userStorage.getCommonFriends(userId, otherId);
     }
 
+    public User deleteUser(long id) {
+        User user = userStorage.get(id);
+        userStorage.delete(id);
+        return user;
+    }
+
     private void checkName(User user) {
         String name = user.getName();
         if (name == null || name.isBlank()) {

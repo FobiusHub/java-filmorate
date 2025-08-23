@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.List;
@@ -24,7 +25,7 @@ public class FilmController {
     @PutMapping
     public Film update(@Valid @RequestBody Film newFilmData) {
         filmService.update(newFilmData);
-        return  newFilmData;
+        return newFilmData;
     }
 
     @GetMapping
@@ -50,5 +51,10 @@ public class FilmController {
     @GetMapping("/popular")
     public List<Film> getTopFilms(@RequestParam(defaultValue = "10") long count) {
         return filmService.getTopFilms(count);
+    }
+
+    @DeleteMapping("{id}")
+    public Film deleteFilm(@PathVariable long id) {
+        return filmService.deleteFilm(id);
     }
 }

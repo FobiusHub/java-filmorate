@@ -5,10 +5,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.repository.BaseRepository;
+import ru.yandex.practicum.filmorate.repository.mappers.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.repository.mappers.GenreRowMapper;
 import ru.yandex.practicum.filmorate.repository.mappers.MpaRowMapper;
 
@@ -23,6 +25,8 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private static final String INSERT_LIKES_QUERY = "INSERT INTO likes(film_id, user_id) VALUES (?, ?)";
     private static final String INSERT_GENRES_QUERY = "INSERT INTO film_genres(film_id, genre_id) VALUES (?, ?)";
     private static final String REMOVE_GENRES_QUERY = "DELETE FROM film_genres WHERE film_id = ?";
+    private static final String INSERT_DIRECTORS_QUERY = "INSERT INTO film_directors(film_id, director_id) VALUES (?, ?)";
+    private static final String REMOVE_DIRECTORS_QUERY = "DELETE FROM film_directors WHERE film_id = ?";
     private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?, " +
             "duration = ?, mpa_id = ? WHERE film_id = ?";
     private static final String DELETE_QUERY = "DELETE FROM films WHERE film_id = ?";
@@ -37,6 +41,15 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private static final String TOP_QUERY = "SELECT f.*, COUNT(l.user_id) FROM films AS f LEFT JOIN likes AS l ON " +
             "f.film_id = l.film_id GROUP BY f.film_id ORDER BY COUNT(l.user_id) DESC LIMIT ?";
     private static final String GET_LIKES_QUERY = "SELECT user_id FROM likes WHERE film_id = ?";
+    private static final String DIRECTOR_FILMS_LIKES_QUERY = "SELECT f.* FROM films AS f "+
+            "JOIN film_directors AS fd ON fd.film_id = f.film_id " +
+            "LEFT JOIN likes AS l ON f.film_id = l.film_id " +
+            "WHERE fd.director_id = ? GROUP BY f.film_id ORDER BY COUNT(l.user_id) DESC";
+    private static final String DIRECTOR_FILMS_YEAR_QUERY = "SELECT f.* FROM films AS f " +
+            "JOIN film_directors AS fd ON fd.film_id = f.film_id " +
+            "WHERE fd.director_id = ? ORDER BY EXTRACT(YEAR FROM f.release_date) ASC";
+    private static final String FILM_DIRECTORS_QUERY = "SELECT d.* FROM film_directors AS fd JOIN directors AS d " +
+            "ON fd.director_id = d.director_id WHERE fd.film_id = ?";
 
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -79,6 +92,9 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
         delete(REMOVE_GENRES_QUERY, id);
         addMany(INSERT_GENRES_QUERY, id, film.getGenres().stream().map(Genre::getId).toList());
+
+        delete(REMOVE_DIRECTORS_QUERY, id);
+        addMany(INSERT_DIRECTORS_QUERY, id, film.getDirectors().stream().map(Director::getId).toList());
     }
 
     @Override
@@ -133,6 +149,24 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         return top;
     }
 
+    @Override
+    public List<Film> getDirectorFilmsSortedByLikes(long directorId) {
+        List<Film> directorFilmsSortedByLikes = findMany(DIRECTOR_FILMS_LIKES_QUERY, directorId);
+        for (Film film : directorFilmsSortedByLikes) {
+            setParameters(film);
+        }
+        return directorFilmsSortedByLikes;
+    }
+
+    @Override
+    public List<Film> getDirectorFilmsSortedByYear(long directorId) {
+        List<Film> directorFilmsSortedByYear = findMany(DIRECTOR_FILMS_YEAR_QUERY, directorId);
+        for (Film film : directorFilmsSortedByYear) {
+            setParameters(film);
+        }
+        return directorFilmsSortedByYear;
+    }
+
     private List<Genre> getFilmGenres(long id) {
         GenreRowMapper genreMapper = new GenreRowMapper();
         return jdbc.query(FILM_GENRES_QUERY, genreMapper, id);
@@ -141,6 +175,11 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private Mpa getMpa(long id) {
         MpaRowMapper mpaMapper = new MpaRowMapper();
         return jdbc.queryForObject(MPA_QUERY, mpaMapper, id);
+    }
+
+    private List<Director> getFilmDirectors(long id) {
+        DirectorRowMapper directorMapper = new DirectorRowMapper();
+        return jdbc.query(FILM_DIRECTORS_QUERY, directorMapper, id);
     }
 
     private void setParameters(Film film) {
@@ -157,5 +196,10 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
         Mpa rating = getMpa(id);
         film.setMpa(rating);
+
+        List<Director> directors = getFilmDirectors(id);
+        for (Director director : directors) {
+            film.addDirector(director);
+        }
     }
 }

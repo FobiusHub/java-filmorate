@@ -31,6 +31,8 @@ public class Film {
     private final Set<Genre> genres = new HashSet<>();
     private Mpa mpa;
 
+    private Set<Director> directors = new HashSet<>();
+
     public void like(long userId) {
         likes.add(userId);
     }
@@ -45,5 +47,9 @@ public class Film {
 
     public void addGenre(Genre genre) {
         genres.add(genre);
+    }
+
+    public void addDirector(Director director) {
+        directors.add(director);
     }
 }

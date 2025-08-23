@@ -80,6 +80,16 @@ public class FilmService {
         return filmStorage.getTopFilms(size);
     }
 
+    public List<Film> getDirectorFilms(long directorId, String sortBy) {
+        if (sortBy.equals("year")) {
+            return filmStorage.getDirectorFilmsSortedByYear(directorId);
+        } else if (sortBy.equals("likes")) {
+            return filmStorage.getDirectorFilmsSortedByLikes(directorId);
+        } else {
+            throw new ValidationException("Не заполнен тип сортировки");
+        }
+    }
+
     private void validateFilmData(Film film) {
         LocalDate releaseDate = film.getReleaseDate();
         if (releaseDate.isBefore(LocalDate.of(1895, 12, 28))) {

@@ -80,6 +80,12 @@ public class FilmService {
         return filmStorage.getTopFilms(size);
     }
 
+    public Film deleteFilm(long id) {
+        Film film = filmStorage.get(id);
+        filmStorage.delete(id);
+        return film;
+    }
+
     private void validateFilmData(Film film) {
         LocalDate releaseDate = film.getReleaseDate();
         if (releaseDate.isBefore(LocalDate.of(1895, 12, 28))) {

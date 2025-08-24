@@ -80,6 +80,12 @@ public class FilmService {
         return filmStorage.getTopFilms(size);
     }
 
+    public Film deleteFilm(long id) {
+        Film film = filmStorage.get(id);
+        filmStorage.delete(id);
+        return film;
+    }
+
     public List<Film> getDirectorFilms(long directorId, String sortBy) {
         if (sortBy.equals("year")) {
             return filmStorage.getDirectorFilmsSortedByYear(directorId);

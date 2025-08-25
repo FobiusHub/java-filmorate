@@ -50,6 +50,22 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             "WHERE fd.director_id = ? ORDER BY EXTRACT(YEAR FROM f.release_date) ASC";
     private static final String FILM_DIRECTORS_QUERY = "SELECT d.* FROM film_directors AS fd JOIN directors AS d " +
             "ON fd.director_id = d.director_id WHERE fd.film_id = ?";
+    private static final String FILMS_SEARCH_BY_TITLE = "SELECT f.* FROM films AS f " +
+            "LEFT JOIN likes AS l ON f.film_id = l.film_id " +
+            "WHERE LOWER(f.name) LIKE LOWER('%' || ? || '%') GROUP BY f.film_id ORDER BY COUNT(l.user_id) DESC";
+    private static final String FILMS_SEARCH_BY_DIRECTOR = "SELECT f.* FROM films AS f " +
+            "JOIN film_directors AS fd ON fd.film_id = f.film_id " +
+            "LEFT JOIN directors AS d ON d.director_id = fd.director_id " +
+            "LEFT JOIN likes AS l ON f.film_id = l.film_id " +
+            "WHERE LOWER(d.name) LIKE LOWER('%' || ? || '%') " +
+            "GROUP BY f.film_id ORDER BY COUNT(l.user_id) DESC";
+    private static final String FILMS_SEARCH_BY_DIRECTOR_OR_TITLE = "SELECT f.* FROM films AS f " +
+            "LEFT JOIN film_directors AS fd ON fd.film_id = f.film_id " +
+            "LEFT JOIN directors AS d ON d.director_id = fd.director_id " +
+            "LEFT JOIN likes AS l ON f.film_id = l.film_id " +
+            "WHERE LOWER(f.name) LIKE LOWER('%' || ? || '%') " +
+            "OR LOWER(d.name) LIKE LOWER('%' || ? || '%') " +
+            "GROUP BY f.film_id ORDER BY COUNT(l.user_id) DESC";
 
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -73,6 +89,10 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                 .map(Genre::getId)
                 .toList();
         addMany(INSERT_GENRES_QUERY, id, genres);
+        List<Long> directors = film.getDirectors().stream()
+                .map(Director::getId)
+                .toList();
+        addMany(INSERT_DIRECTORS_QUERY, id, directors);
 
         return film;
     }
@@ -165,6 +185,34 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             setParameters(film);
         }
         return directorFilmsSortedByYear;
+    }
+
+    @Override
+    public List<Film> getFilmsSearchByTitle(String query) {
+        List<Film> filmsSearchByTitle = findMany(FILMS_SEARCH_BY_TITLE, query);
+        for (Film film : filmsSearchByTitle) {
+            setParameters(film);
+        }
+        return filmsSearchByTitle;
+    }
+
+    @Override
+    public List<Film> getFilmsSearchByDirector(String query) {
+        List<Film> filmsSearchByDirector = findMany(FILMS_SEARCH_BY_DIRECTOR, query);
+//        List<Film> filmsSearchByDirector = findMany(FILMS_SEARCH_BY_DIRECTOR);
+        for (Film film : filmsSearchByDirector) {
+            setParameters(film);
+        }
+        return filmsSearchByDirector;
+    }
+
+    @Override
+    public List<Film> getFilmsSearchByDirectorOrTitle(String query) {
+        List<Film> filmsSearchByDirectorOrTitle = findMany(FILMS_SEARCH_BY_DIRECTOR_OR_TITLE, query, query);
+        for (Film film : filmsSearchByDirectorOrTitle) {
+            setParameters(film);
+        }
+        return filmsSearchByDirectorOrTitle;
     }
 
     private List<Genre> getFilmGenres(long id) {

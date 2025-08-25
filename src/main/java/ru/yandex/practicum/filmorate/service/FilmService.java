@@ -96,6 +96,15 @@ public class FilmService {
         }
     }
 
+    public List<Film> getFilmsSearch(String query, String by) {
+        return switch (by) {
+            case "title" -> filmStorage.getFilmsSearchByTitle(query);
+            case "director" -> filmStorage.getFilmsSearchByDirector(query);
+            case "director,title", "title,director" -> filmStorage.getFilmsSearchByDirectorOrTitle(query);
+            default -> throw new ValidationException("Не заполнен тип поиска");
+        };
+    }
+
     private void validateFilmData(Film film) {
         LocalDate releaseDate = film.getReleaseDate();
         if (releaseDate.isBefore(LocalDate.of(1895, 12, 28))) {

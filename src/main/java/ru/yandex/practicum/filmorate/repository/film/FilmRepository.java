@@ -14,8 +14,7 @@ import ru.yandex.practicum.filmorate.repository.mappers.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.repository.mappers.GenreRowMapper;
 import ru.yandex.practicum.filmorate.repository.mappers.MpaRowMapper;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Component("filmDb")
@@ -50,6 +49,14 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             "WHERE fd.director_id = ? ORDER BY EXTRACT(YEAR FROM f.release_date) ASC";
     private static final String FILM_DIRECTORS_QUERY = "SELECT d.* FROM film_directors AS fd JOIN directors AS d " +
             "ON fd.director_id = d.director_id WHERE fd.film_id = ?";
+    private static final String FIND_RECOMMENDATION_FILMS = "SELECT f.*, COUNT(l_all.user_id) " +
+            "FROM films AS f " +
+            "JOIN likes AS l ON l.film_id = f.film_id " +
+            "LEFT JOIN likes AS l_all ON l_all.film_id = f.film_id " +
+            "WHERE l.user_id = ? AND f.film_id NOT IN (SELECT film_id FROM likes WHERE user_id = ?) " +
+            "GROUP BY f.film_id " +
+            "ORDER BY COUNT(l_all.user_id) DESC " +
+            "LIMIT 5;";
 
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -165,6 +172,22 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             setParameters(film);
         }
         return directorFilmsSortedByYear;
+    }
+
+    @Override
+    public List<Film> getRecommendationFilms(List<Long> usersIdWithSimilarLikes, Long userId) {
+        Set<Film> recommendationFilms = new LinkedHashSet<>();
+        for (Long userIdWithSimilarLikes : usersIdWithSimilarLikes) {
+            List<Film> films = findMany(FIND_RECOMMENDATION_FILMS, userIdWithSimilarLikes, userId);
+            for (Film film : films) {
+                setParameters(film);
+                recommendationFilms.add(film);
+                if (recommendationFilms.size() > 4) {
+                    return recommendationFilms.stream().toList();
+                }
+            }
+        }
+        return recommendationFilms.stream().toList();
     }
 
     private List<Genre> getFilmGenres(long id) {

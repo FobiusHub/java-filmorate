@@ -8,6 +8,8 @@ import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.repository.BaseRepository;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,6 +31,13 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
             "ON u.user_id = f.friend_id WHERE f.user_id = ?";
     private static final String COMMON_FRIENDS_QUERY = "SELECT * FROM users u, friends f, friends o " +
             "WHERE u.user_id = f.friend_id AND u.user_id = o.friend_id AND f.user_id = ? AND o.user_id = ?";
+    private static final String HAS_LIKES_COUNT_QUERY = "SELECT COUNT(*) FROM likes WHERE user_id = ?";
+    private static final String FIND_USERS_ID_WITH_SIMILAR_LIKES = "SELECT user_id " +
+            "FROM likes " +
+            "WHERE film_id IN (SELECT film_id FROM likes WHERE user_id = ?) AND user_id <> ? " +
+            "GROUP BY user_id " +
+            "ORDER BY COUNT(*) DESC " +
+            "LIMIT 5;";
 
     public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
@@ -117,10 +126,23 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
         return findMany(COMMON_FRIENDS_QUERY, userId, otherId);
     }
 
+    @Override
+    public List<Long> getUsersIdWithSimilarLikes(long id) {
+        if (!userHasLikes(id)) {
+            return Collections.emptyList();
+        }
+        return new ArrayList<>(jdbc.queryForList(FIND_USERS_ID_WITH_SIMILAR_LIKES, Long.class, id, id));
+    }
+
     private void setFriends(User user) {
         List<User> friends = findMany(GET_FRIENDS_QUERY, user.getId());
         for (User friend : friends) {
             user.addFriend(friend.getId());
         }
+    }
+
+    private boolean userHasLikes(long userId) {
+        Integer likesCount = jdbc.queryForObject(HAS_LIKES_COUNT_QUERY, Integer.class, userId);
+        return likesCount > 0;
     }
 }

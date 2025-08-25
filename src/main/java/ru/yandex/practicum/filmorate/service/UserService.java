@@ -1,26 +1,26 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.repository.event.EventStorage;
 import ru.yandex.practicum.filmorate.repository.user.UserStorage;
 
 import java.util.List;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserService {
     private final UserStorage userStorage;
-
-    @Autowired
-    public UserService(@Qualifier("userDb") UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
+    private final EventStorage eventStorage;
 
     public User create(User user) {
         checkName(user);
@@ -50,40 +50,27 @@ public class UserService {
     }
 
     public void addFriend(long userId, long friendId) {
-        User user = userStorage.get(userId);
-        if (!userStorage.exists(friendId)) {
-            log.warn("При запросе данных пользователя возникла ошибка: Пользователь не найден");
-            throw new NotFoundException("Пользователь " + friendId + " не найден");
-        }
+        checkUserExist(userId);
+        checkUserExist(friendId);
         userStorage.addFriend(userId, friendId);
+        eventStorage.add(new Event(userId, EventType.FRIEND, Operation.ADD, friendId));
     }
 
     public void removeFriend(long userId, long friendId) {
-        User user = userStorage.get(userId);
-        if (!userStorage.exists(friendId)) {
-            log.warn("При запросе данных пользователя возникла ошибка: Пользователь не найден");
-            throw new NotFoundException("Пользователь " + friendId + " не найден");
-        }
+        checkUserExist(userId);
+        checkUserExist(friendId);
         userStorage.removeFriend(userId, friendId);
+        eventStorage.add(new Event(userId, EventType.FRIEND, Operation.REMOVE, friendId));
     }
 
-    public List<User> getFriends(long id) {
-        if (!userStorage.exists(id)) {
-            log.warn("При запросе данных пользователя возникла ошибка: Пользователь не найден");
-            throw new NotFoundException("Пользователь " + id + " не найден");
-        }
-        return userStorage.getFriends(id);
+    public List<User> getFriends(long userId) {
+        checkUserExist(userId);
+        return userStorage.getFriends(userId);
     }
 
     public List<User> getCommonFriends(long userId, long otherId) {
-        if (!userStorage.exists(userId)) {
-            log.warn("При запросе данных пользователя возникла ошибка: Пользователь не найден");
-            throw new NotFoundException("Пользователь " + userId + " не найден");
-        }
-        if (!userStorage.exists(otherId)) {
-            log.warn("При запросе данных пользователя возникла ошибка: Пользователь не найден");
-            throw new NotFoundException("Пользователь " + otherId + " не найден");
-        }
+        checkUserExist(userId);
+        checkUserExist(otherId);
         return userStorage.getCommonFriends(userId, otherId);
     }
 
@@ -93,12 +80,24 @@ public class UserService {
         return user;
     }
 
+    public List<Event> getEvents(long userId) {
+        checkUserExist(userId);
+        return eventStorage.getFeed(userId);
+    }
+
     private void checkName(User user) {
         String name = user.getName();
         if (name == null || name.isBlank()) {
             String login = user.getLogin();
             user.setName(login);
             log.debug("Имя пользователя не указано. В качестве имени присвоен логин {}.", login);
+        }
+    }
+
+    private void checkUserExist(long userId) {
+        if (!userStorage.exists(userId)) {
+            log.warn("При запросе данных пользователя возникла ошибка: Пользователь не найден");
+            throw new NotFoundException("Пользователь " + userId + " не найден");
         }
     }
 }

@@ -5,7 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.repository.event.EventStorage;
 import ru.yandex.practicum.filmorate.repository.film.FilmStorage;
 import ru.yandex.practicum.filmorate.repository.review.ReviewStorage;
 import ru.yandex.practicum.filmorate.repository.user.UserStorage;
@@ -19,6 +23,7 @@ public class ReviewService {
     private final ReviewStorage reviewStorage;
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final EventStorage eventStorage;
 
     public Review create(Review review) {
         long userId = review.getUserId();
@@ -31,7 +36,9 @@ public class ReviewService {
             log.warn("При создании отзыва возникла ошибка: Фильм не найден");
             throw new NotFoundException("Фильм " + filmId + " не найден");
         }
-        return reviewStorage.add(review);
+        reviewStorage.add(review);
+        eventStorage.add(new Event(userId, EventType.REVIEW, Operation.ADD, review.getReviewId()));
+        return review;
     }
 
     public void update(Review newReviewData) {
@@ -47,11 +54,13 @@ public class ReviewService {
         }
         checkUserExist(userId);
         reviewStorage.update(newReviewData);
+        eventStorage.add(new Event(userId, EventType.REVIEW, Operation.UPDATE, newReviewDataId));
     }
 
     public Review deleteReview(long id) {
         Review review = reviewStorage.get(id);
         reviewStorage.delete(id);
+        eventStorage.add(new Event(review.getUserId(), EventType.REVIEW, Operation.REMOVE, id));
         return review;
     }
 

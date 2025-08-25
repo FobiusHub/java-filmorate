@@ -13,8 +13,6 @@ import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.repository.film.FilmStorage;
 import ru.yandex.practicum.filmorate.repository.event.EventStorage;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.repository.film.FilmStorage;
 import ru.yandex.practicum.filmorate.repository.user.UserStorage;
 
 import java.util.Collections;
@@ -26,7 +24,6 @@ import java.util.List;
 public class UserService {
     private final UserStorage userStorage;
     private final EventStorage eventStorage;
-    private final FilmStorage filmStorage;
     private final FilmStorage filmStorage;
 
     public User create(User user) {

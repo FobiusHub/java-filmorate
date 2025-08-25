@@ -7,19 +7,24 @@ import org.springframework.stereotype.Service;
 
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.repository.film.FilmStorage;
 import ru.yandex.practicum.filmorate.repository.user.UserStorage;
 
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
 @Service
 public class UserService {
     private final UserStorage userStorage;
+    private final FilmStorage filmStorage;
 
     @Autowired
-    public UserService(@Qualifier("userDb") UserStorage userStorage) {
+    public UserService(@Qualifier("userDb") UserStorage userStorage, FilmStorage filmStorage) {
         this.userStorage = userStorage;
+        this.filmStorage = filmStorage;
     }
 
     public User create(User user) {
@@ -91,6 +96,14 @@ public class UserService {
         User user = userStorage.get(id);
         userStorage.delete(id);
         return user;
+    }
+
+    public List<Film> getRecommendations(long id) {
+        List<Long> usersIdWithSimilarLikes = userStorage.getUsersIdWithSimilarLikes(id);
+        if (usersIdWithSimilarLikes.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return filmStorage.getRecommendationFilms(usersIdWithSimilarLikes, id);
     }
 
     private void checkName(User user) {

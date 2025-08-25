@@ -6,13 +6,16 @@ import org.springframework.stereotype.Service;
 
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.repository.film.FilmStorage;
 import ru.yandex.practicum.filmorate.repository.event.EventStorage;
 import ru.yandex.practicum.filmorate.repository.user.UserStorage;
 
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -21,6 +24,7 @@ import java.util.List;
 public class UserService {
     private final UserStorage userStorage;
     private final EventStorage eventStorage;
+    private final FilmStorage filmStorage;
 
     public User create(User user) {
         checkName(user);
@@ -83,6 +87,14 @@ public class UserService {
     public List<Event> getEvents(long userId) {
         checkUserExist(userId);
         return eventStorage.getFeed(userId);
+    }
+
+    public List<Film> getRecommendations(long id) {
+        List<Long> usersIdWithSimilarLikes = userStorage.getUsersIdWithSimilarLikes(id);
+        if (usersIdWithSimilarLikes.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return filmStorage.getRecommendationFilms(usersIdWithSimilarLikes, id);
     }
 
     private void checkName(User user) {

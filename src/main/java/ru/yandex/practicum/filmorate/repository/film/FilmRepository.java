@@ -49,6 +49,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             "WHERE fd.director_id = ? ORDER BY EXTRACT(YEAR FROM f.release_date) ASC";
     private static final String FILM_DIRECTORS_QUERY = "SELECT d.* FROM film_directors AS fd JOIN directors AS d " +
             "ON fd.director_id = d.director_id WHERE fd.film_id = ?";
+
     private static final String FIND_RECOMMENDATION_FILMS = "SELECT f.*, COUNT(l_all.user_id) " +
             "FROM films AS f " +
             "JOIN likes AS l ON l.film_id = f.film_id " +
@@ -73,6 +74,46 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             "WHERE LOWER(f.name) LIKE LOWER('%' || ? || '%') " +
             "OR LOWER(d.name) LIKE LOWER('%' || ? || '%') " +
             "GROUP BY f.film_id ORDER BY COUNT(l.user_id) DESC";
+    private static final String TOP_BY_GENRE_AND_YEAR = """
+            SELECT f.*, COUNT(l.user_id) as likes_count\s
+            FROM films AS f\s
+            LEFT JOIN likes AS l ON f.film_id = l.film_id
+            JOIN film_genres AS fg ON f.film_id = fg.film_id
+            WHERE fg.genre_id = ? AND YEAR(f.release_date) = ?
+            GROUP BY f.film_id\s
+            ORDER BY COUNT(l.user_id) DESC\s
+            LIMIT ?
+            \s""";
+
+    private static final String TOP_BY_GENRE = """
+    SELECT f.*, COUNT(l.user_id) as likes_count\s
+    FROM films AS f\s
+    LEFT JOIN likes AS l ON f.film_id = l.film_id
+    JOIN film_genres AS fg ON f.film_id = fg.film_id
+    WHERE fg.genre_id = ?
+    GROUP BY f.film_id\s
+    ORDER BY COUNT(l.user_id) DESC\s
+    LIMIT ?
+   \s""";
+
+    private static final String TOP_BY_YEAR = """
+    SELECT f.*, COUNT(l.user_id) as likes_count\s
+    FROM films AS f\s
+    LEFT JOIN likes AS l ON f.film_id = l.film_id
+    WHERE YEAR(f.release_date) = ?
+    GROUP BY f.film_id\s
+    ORDER BY COUNT(l.user_id) DESC\s
+    LIMIT ?
+   \s""";
+
+    private static final String TOP_ALL = """
+    SELECT f.*, COUNT(l.user_id) as likes_count\s
+    FROM films AS f\s
+    LEFT JOIN likes AS l ON f.film_id = l.film_id
+    GROUP BY f.film_id\s
+    ORDER BY COUNT(l.user_id) DESC\s
+    LIMIT ?
+   \s""";
 
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -174,6 +215,33 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             setParameters(film);
         }
         return top;
+    }
+
+    @Override
+    public List<Film> getTopFilmsByGenreAndYear(long limit, long genreId, int year) {
+        List<Film> films = findMany(TOP_BY_GENRE_AND_YEAR, genreId, year, limit);
+        for (Film film : films) {
+            setParameters(film);
+        }
+        return films;
+    }
+
+    @Override
+    public List<Film> getTopFilmsByGenre(long limit, long genreId) {
+        List<Film> films = findMany(TOP_BY_GENRE, genreId, limit);
+        for (Film film : films) {
+            setParameters(film);
+        }
+        return films;
+    }
+
+    @Override
+    public List<Film> getTopFilmsByYear(long limit, int year) {
+        List<Film> films = findMany(TOP_BY_YEAR, year, limit);
+        for (Film film : films) {
+            setParameters(film);
+        }
+        return films;
     }
 
     @Override

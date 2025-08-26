@@ -79,10 +79,6 @@ public class FilmService {
         eventStorage.add(new Event(userId, EventType.LIKE, Operation.REMOVE, filmId));
     }
 
-    public List<Film> getTopFilms(long size) {
-        return filmStorage.getTopFilms(size);
-    }
-
     public Film deleteFilm(long id) {
         Film film = filmStorage.get(id);
         filmStorage.delete(id);
@@ -99,6 +95,7 @@ public class FilmService {
         }
     }
 
+
     public List<Film> getFilmsSearch(String query, String by) {
         return switch (by) {
             case "title" -> filmStorage.getFilmsSearchByTitle(query);
@@ -106,6 +103,20 @@ public class FilmService {
             case "director,title", "title,director" -> filmStorage.getFilmsSearchByDirectorOrTitle(query);
             default -> throw new ValidationException("Не заполнен тип поиска");
         };
+    }
+
+    public List<Film> getTopFilms(long count, Long genreId, Integer year) {
+
+        if (genreId != null && year != null) {
+            return filmStorage.getTopFilmsByGenreAndYear(count, genreId, year);
+        } else if (genreId != null) {
+            return filmStorage.getTopFilmsByGenre(count, genreId);
+        } else if (year != null) {
+            return filmStorage.getTopFilmsByYear(count, year);
+        } else {
+            return filmStorage.getTopFilms(count);
+        }
+
     }
 
     private void validateFilmData(Film film) {
@@ -125,4 +136,5 @@ public class FilmService {
             }
         }
     }
+
 }

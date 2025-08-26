@@ -22,6 +22,12 @@ public interface FilmStorage {
 
     void removeLike(long filmId, long userId);
 
+    List<Film> getTopFilmsByGenreAndYear(long limit, long genreId, int year);
+
+    List<Film> getTopFilmsByGenre(long limit, long genreId);
+
+    List<Film> getTopFilmsByYear(long limit, int year);
+
     List<Film> getTopFilms(long size);
 
     List<Film> getDirectorFilmsSortedByLikes(long directorId);
@@ -35,4 +41,6 @@ public interface FilmStorage {
     List<Film> getFilmsSearchByDirector(String query);
 
     List<Film> getFilmsSearchByDirectorOrTitle(String query);
+
+
 }

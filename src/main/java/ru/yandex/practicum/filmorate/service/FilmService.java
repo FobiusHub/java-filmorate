@@ -5,8 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.repository.event.EventStorage;
 import ru.yandex.practicum.filmorate.repository.film.FilmStorage;
 import ru.yandex.practicum.filmorate.repository.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.repository.mpa.MpaStorage;
@@ -24,6 +24,7 @@ public class FilmService {
     private final UserStorage userStorage;
     private final GenreStorage genreStorage;
     private final MpaStorage mpaStorage;
+    private final EventStorage eventStorage;
 
     public Film create(Film film) {
         validateFilmData(film);
@@ -65,6 +66,7 @@ public class FilmService {
             throw new NotFoundException("Фильм " + filmId + " не найден");
         }
         filmStorage.like(filmId, userId);
+        eventStorage.add(new Event(userId, EventType.LIKE, Operation.ADD, filmId));
     }
 
     public void removeLike(long filmId, long userId) {
@@ -74,6 +76,7 @@ public class FilmService {
             throw new NotFoundException("Фильм " + filmId + " не найден");
         }
         filmStorage.get(filmId).removeLike(userId);
+        eventStorage.add(new Event(userId, EventType.LIKE, Operation.REMOVE, filmId));
     }
 
     public List<Film> getTopFilms(long size) {
@@ -104,7 +107,22 @@ public class FilmService {
             default -> throw new ValidationException("Не заполнен тип поиска");
         };
     }
+    public List<Film> getCommonFilms(long userId, long friendId) {
 
+        if (!userStorage.exists(userId)) {
+            log.warn("Пользователь не найден: {}", userId);
+            throw new NotFoundException("Пользователь " + userId + " не найден");
+        }
+        if (!userStorage.exists(friendId)) {
+            log.warn("Пользователь не найден: {}", friendId);
+            throw new NotFoundException("Пользователь " + friendId + " не найден");
+        }if (!userStorage.areFriends(userId,friendId)) {
+            log.warn("Пользователь не найден: {}", friendId);
+            throw new NotFoundException("Пользователи не в друзьях");
+        }
+
+        return filmStorage.getCommonFilms(userId, friendId);
+    }
     private void validateFilmData(Film film) {
         LocalDate releaseDate = film.getReleaseDate();
         if (releaseDate.isBefore(LocalDate.of(1895, 12, 28))) {

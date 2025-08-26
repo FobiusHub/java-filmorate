@@ -50,7 +50,16 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             "WHERE fd.director_id = ? ORDER BY EXTRACT(YEAR FROM f.release_date) ASC";
     private static final String FILM_DIRECTORS_QUERY = "SELECT d.* FROM film_directors AS fd JOIN directors AS d " +
             "ON fd.director_id = d.director_id WHERE fd.film_id = ?";
-
+    private static final String TOP_BY_GENRE_AND_YEAR = """
+    SELECT f.*, COUNT(l.user_id) as likes_count\s
+    FROM films AS f\s
+    LEFT JOIN likes AS l ON f.film_id = l.film_id
+    JOIN film_genres AS fg ON f.film_id = fg.film_id
+    WHERE fg.genre_id = ? AND YEAR(f.release_date) = ?
+    GROUP BY f.film_id\s
+    ORDER BY COUNT(l.user_id) DESC\s
+    LIMIT ?
+   \s""";
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
     }
@@ -143,6 +152,15 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     @Override
     public List<Film> getTopFilms(long size) {
         List<Film> top = findMany(TOP_QUERY, size);
+        for (Film film : top) {
+            setParameters(film);
+        }
+        return top;
+    }
+    @Override
+    public List<Film> getTopFilms(long size, Long genreId, Integer year) {
+
+        List<Film> top = findMany(TOP_BY_GENRE_AND_YEAR,  genreId, year,size);
         for (Film film : top) {
             setParameters(film);
         }

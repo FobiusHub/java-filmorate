@@ -96,6 +96,10 @@ public class FilmService {
         }
     }
 
+    public List<Film> getTopFilms(long count, Long genreId, Integer year) {
+        return filmStorage.getTopFilms(count, genreId, year);
+    }
+
     private void validateFilmData(Film film) {
         LocalDate releaseDate = film.getReleaseDate();
         if (releaseDate.isBefore(LocalDate.of(1895, 12, 28))) {
@@ -113,4 +117,5 @@ public class FilmService {
             }
         }
     }
+
 }

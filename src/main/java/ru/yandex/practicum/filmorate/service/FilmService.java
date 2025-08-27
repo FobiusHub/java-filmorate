@@ -72,12 +72,15 @@ public class FilmService {
     }
 
     public void removeLike(long filmId, long userId) {
-        userStorage.exists(userId);
+        if (!userStorage.exists(userId)) {
+            log.warn("Не удалось удалить лайк: Пользователь не найден");
+            throw new NotFoundException("Пользователь " + userId + " не найден");
+        }
         if (!filmStorage.exists(filmId)) {
             log.warn("Не удалось удалить лайк: Фильм не найден");
             throw new NotFoundException("Фильм " + filmId + " не найден");
         }
-        filmStorage.get(filmId).removeLike(userId);
+        filmStorage.removeLike(filmId, userId);
         eventStorage.add(new Event(userId, EventType.LIKE, Operation.REMOVE, filmId));
     }
 
@@ -100,7 +103,6 @@ public class FilmService {
             throw new ValidationException("Не заполнен тип сортировки");
         }
     }
-
 
     public List<Film> getFilmsSearch(String query, String by) {
         return switch (by) {
@@ -125,6 +127,20 @@ public class FilmService {
 
     }
 
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        // Проверяем существование пользователей
+        if (!userStorage.exists(userId)) {
+            log.warn("Пользователь не найден: {}", userId);
+            throw new NotFoundException("Пользователь " + userId + " не найден");
+        }
+        if (!userStorage.exists(friendId)) {
+            log.warn("Пользователь не найден: {}", friendId);
+            throw new NotFoundException("Пользователь " + friendId + " не найден");
+        }
+
+        return filmStorage.getCommonFilms(userId, friendId);
+    }
+
     private void validateFilmData(Film film) {
         LocalDate releaseDate = film.getReleaseDate();
         if (releaseDate.isBefore(LocalDate.of(1895, 12, 28))) {
@@ -142,5 +158,4 @@ public class FilmService {
             }
         }
     }
-
 }

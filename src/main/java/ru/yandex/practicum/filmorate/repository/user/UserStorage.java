@@ -27,4 +27,5 @@ public interface UserStorage {
     List<User> getCommonFriends(long userId, long otherId);
 
     public List<Long> getUsersIdWithSimilarLikes(long id);
+
 }

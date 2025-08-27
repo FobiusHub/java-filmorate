@@ -28,5 +28,4 @@ public interface UserStorage {
 
     public List<Long> getUsersIdWithSimilarLikes(long id);
 
-    boolean areFriends(long userId, long friendId);
 }

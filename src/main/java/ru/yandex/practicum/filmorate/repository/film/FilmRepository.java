@@ -74,6 +74,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             "WHERE LOWER(f.name) LIKE LOWER('%' || ? || '%') " +
             "OR LOWER(d.name) LIKE LOWER('%' || ? || '%') " +
             "GROUP BY f.film_id ORDER BY COUNT(l.user_id) DESC";
+
     private static final String TOP_BY_GENRE_AND_YEAR = """
             SELECT f.*, COUNT(l.user_id) as likes_count\s
             FROM films AS f\s
@@ -123,6 +124,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                     "LEFT JOIN likes l ON f.film_id = l.film_id " +
                     "GROUP BY f.film_id " +
                     "ORDER BY likes_count DESC";
+
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
     }
@@ -322,6 +324,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         }
         return commonFilms;
     }
+
     private List<Genre> getFilmGenres(long id) {
         GenreRowMapper genreMapper = new GenreRowMapper();
         return jdbc.query(FILM_GENRES_QUERY, genreMapper, id);

@@ -43,14 +43,12 @@ public class ReviewService {
 
     public Review update(Review newReviewData) {
         Long newReviewDataId = newReviewData.getReviewId();
-
-        long userId = newReviewData.getUserId();
         if (newReviewDataId == null) {
             log.warn("При обновлении данных отзыва возникла ошибка: Необходимо указать ID");
             throw new ValidationException("Необходимо указать ID");
         }
+        long userId = reviewStorage.get(newReviewDataId).getUserId();
 
-        checkUserExist(userId);
         Review review = reviewStorage.get(newReviewDataId);
         review.setContent(newReviewData.getContent());
         review.setIsPositive(newReviewData.getIsPositive());

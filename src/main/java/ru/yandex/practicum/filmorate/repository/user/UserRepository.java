@@ -38,7 +38,10 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
             "GROUP BY user_id " +
             "ORDER BY COUNT(*) DESC " +
             "LIMIT 5;";
-
+    private static final String COUNT_COMMON_FRIENDS_QUERY =
+            "SELECT COUNT(*) FROM friends " +
+            "WHERE (user_id = ? AND friend_id = ?) " +
+             "OR (user_id = ? AND friend_id = ?)";
     public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
     }
@@ -133,7 +136,17 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
         }
         return new ArrayList<>(jdbc.queryForList(FIND_USERS_ID_WITH_SIMILAR_LIKES, Long.class, id, id));
     }
+    @Override
+    public boolean areFriends(long userId, long friendId) {
 
+        Integer count = jdbc.queryForObject(
+                COUNT_COMMON_FRIENDS_QUERY,
+                Integer.class,
+                userId, friendId, friendId, userId
+        );
+
+        return count != null && count > 0;
+    }
     private void setFriends(User user) {
         List<User> friends = findMany(GET_FRIENDS_QUERY, user.getId());
         for (User friend : friends) {

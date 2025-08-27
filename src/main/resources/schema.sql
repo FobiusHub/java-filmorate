@@ -54,7 +54,7 @@ create TABLE IF NOT EXISTS reviews (
     positive BOOL,
     user_id BIGINT NOT NULL,
     film_id BIGINT NOT NULL,
-    useful BIGINT,
+    useful BIGINT NOT NULL,
     PRIMARY KEY (review_id)
 );
 
@@ -73,7 +73,7 @@ create TABLE if not EXISTS film_directors (
 CREATE TABLE if not EXISTS events (
     event_id BIGINT GENERATED ALWAYS AS IDENTITY,
     timestamp BIGINT NOT NULL,
-    user_id BIGINT NOT NULL REFERENCES users(user_id),
+    user_id BIGINT NOT NULL REFERENCES users(user_id) ON delete CASCADE,
     event_type VARCHAR(6) NOT NULL,
     operation VARCHAR(6) NOT NULL,
     entity_id BIGINT NOT NULL,

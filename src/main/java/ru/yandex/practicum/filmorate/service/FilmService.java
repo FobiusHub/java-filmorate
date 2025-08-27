@@ -72,12 +72,15 @@ public class FilmService {
     }
 
     public void removeLike(long filmId, long userId) {
-        userStorage.exists(userId);
+        if (!userStorage.exists(userId)) {
+            log.warn("Не удалось удалить лайк: Пользователь не найден");
+            throw new NotFoundException("Пользователь " + userId + " не найден");
+        }
         if (!filmStorage.exists(filmId)) {
             log.warn("Не удалось удалить лайк: Фильм не найден");
             throw new NotFoundException("Фильм " + filmId + " не найден");
         }
-        filmStorage.get(filmId).removeLike(userId);
+        filmStorage.removeLike(filmId, userId);
         eventStorage.add(new Event(userId, EventType.LIKE, Operation.REMOVE, filmId));
     }
 
@@ -101,7 +104,6 @@ public class FilmService {
         }
     }
 
-
     public List<Film> getFilmsSearch(String query, String by) {
         return switch (by) {
             case "title" -> filmStorage.getFilmsSearchByTitle(query);
@@ -112,7 +114,6 @@ public class FilmService {
     }
 
     public List<Film> getTopFilms(long count, Long genreId, Integer year) {
-
         if (genreId != null && year != null) {
             return filmStorage.getTopFilmsByGenreAndYear(count, genreId, year);
         } else if (genreId != null) {
@@ -122,7 +123,6 @@ public class FilmService {
         } else {
             return filmStorage.getTopFilms(count);
         }
-
     }
 
     private void validateFilmData(Film film) {
@@ -137,10 +137,8 @@ public class FilmService {
         Set<Genre> filmGenres = film.getGenres();
         if (filmGenres != null && !filmGenres.isEmpty()) {
             for (Genre genre : filmGenres) {
-                //здесь происходит проверка наличия жанра в базе данных
                 genreStorage.get(genre.getId());
             }
         }
     }
-
 }

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.repository.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.repository.event.EventStorage;
 import ru.yandex.practicum.filmorate.repository.film.FilmStorage;
 import ru.yandex.practicum.filmorate.repository.genre.GenreStorage;
@@ -25,6 +26,7 @@ public class FilmService {
     private final GenreStorage genreStorage;
     private final MpaStorage mpaStorage;
     private final EventStorage eventStorage;
+    private final DirectorStorage directorStorage;
 
     public Film create(Film film) {
         validateFilmData(film);
@@ -79,10 +81,6 @@ public class FilmService {
         eventStorage.add(new Event(userId, EventType.LIKE, Operation.REMOVE, filmId));
     }
 
-    public List<Film> getTopFilms(long size) {
-        return filmStorage.getTopFilms(size);
-    }
-
     public Film deleteFilm(long id) {
         Film film = filmStorage.get(id);
         filmStorage.delete(id);
@@ -90,6 +88,10 @@ public class FilmService {
     }
 
     public List<Film> getDirectorFilms(long directorId, String sortBy) {
+        if (!directorStorage.exists(directorId)) {
+            log.warn("При запросе данных возникла ошибка: Режиссер не найден");
+            throw new NotFoundException("Режиссер " + directorId + " не найден");
+        }
         if (sortBy.equals("year")) {
             return filmStorage.getDirectorFilmsSortedByYear(directorId);
         } else if (sortBy.equals("likes")) {
@@ -107,6 +109,21 @@ public class FilmService {
             default -> throw new ValidationException("Не заполнен тип поиска");
         };
     }
+
+    public List<Film> getTopFilms(long count, Long genreId, Integer year) {
+
+        if (genreId != null && year != null) {
+            return filmStorage.getTopFilmsByGenreAndYear(count, genreId, year);
+        } else if (genreId != null) {
+            return filmStorage.getTopFilmsByGenre(count, genreId);
+        } else if (year != null) {
+            return filmStorage.getTopFilmsByYear(count, year);
+        } else {
+            return filmStorage.getTopFilms(count);
+        }
+
+    }
+
     public List<Film> getCommonFilms(long userId, long friendId) {
         // Проверяем существование пользователей
         if (!userStorage.exists(userId)) {

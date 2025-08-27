@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.repository.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.repository.event.EventStorage;
 import ru.yandex.practicum.filmorate.repository.film.FilmStorage;
 import ru.yandex.practicum.filmorate.repository.genre.GenreStorage;
@@ -25,6 +26,7 @@ public class FilmService {
     private final GenreStorage genreStorage;
     private final MpaStorage mpaStorage;
     private final EventStorage eventStorage;
+    private final DirectorStorage directorStorage;
 
     public Film create(Film film) {
         validateFilmData(film);
@@ -86,6 +88,10 @@ public class FilmService {
     }
 
     public List<Film> getDirectorFilms(long directorId, String sortBy) {
+        if (!directorStorage.exists(directorId)) {
+            log.warn("При запросе данных возникла ошибка: Режиссер не найден");
+            throw new NotFoundException("Режиссер " + directorId + " не найден");
+        }
         if (sortBy.equals("year")) {
             return filmStorage.getDirectorFilmsSortedByYear(directorId);
         } else if (sortBy.equals("likes")) {
@@ -117,6 +123,24 @@ public class FilmService {
             return filmStorage.getTopFilms(count);
         }
 
+    }
+
+
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        // Проверяем существование пользователей
+        if (!userStorage.exists(userId)) {
+            log.warn("Пользователь не найден: {}", userId);
+            throw new NotFoundException("Пользователь " + userId + " не найден");
+        }
+        if (!userStorage.exists(friendId)) {
+            log.warn("Пользователь не найден: {}", friendId);
+            throw new NotFoundException("Пользователь " + friendId + " не найден");
+        }
+        if (!userStorage.areFriends(userId,friendId)) {
+            log.warn("Пользователь не найден: {}", friendId);
+            throw new NotFoundException("Пользователь " + friendId + " не найден");
+        }
+        return filmStorage.getCommonFilms(userId, friendId);
     }
 
     private void validateFilmData(Film film) {

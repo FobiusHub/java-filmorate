@@ -114,7 +114,6 @@ public class FilmService {
     }
 
     public List<Film> getTopFilms(long count, Long genreId, Integer year) {
-
         if (genreId != null && year != null) {
             return filmStorage.getTopFilmsByGenreAndYear(count, genreId, year);
         } else if (genreId != null) {
@@ -124,7 +123,6 @@ public class FilmService {
         } else {
             return filmStorage.getTopFilms(count);
         }
-
     }
 
     public List<Film> getCommonFilms(long userId, long friendId) {
@@ -153,7 +151,6 @@ public class FilmService {
         Set<Genre> filmGenres = film.getGenres();
         if (filmGenres != null && !filmGenres.isEmpty()) {
             for (Genre genre : filmGenres) {
-                //здесь происходит проверка наличия жанра в базе данных
                 genreStorage.get(genre.getId());
             }
         }

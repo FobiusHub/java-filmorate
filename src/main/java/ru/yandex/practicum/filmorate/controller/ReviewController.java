@@ -23,8 +23,7 @@ public class ReviewController {
 
     @PutMapping
     public Review update(@Valid @RequestBody Review newReviewData) {
-        reviewService.update(newReviewData);
-        return newReviewData;
+        return reviewService.update(newReviewData);
     }
 
     @DeleteMapping("{id}")

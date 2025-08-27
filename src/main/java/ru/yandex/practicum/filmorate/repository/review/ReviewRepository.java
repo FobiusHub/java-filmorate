@@ -16,8 +16,8 @@ import java.util.Optional;
 public class ReviewRepository extends BaseRepository<Review> implements ReviewStorage {
     private static final String INSERT_QUERY = "INSERT INTO reviews(content, positive, user_id, film_id, useful)" +
             "VALUES (?, ?, ?, ?, ?)";
-    private static final String UPDATE_QUERY = "UPDATE reviews SET content = ?, positive = ?, user_id = ?, " +
-            "film_id = ?, useful = ? WHERE review_id = ?";
+    private static final String UPDATE_QUERY = "UPDATE reviews SET content = ?, positive = ?, useful = ? " +
+            "WHERE review_id = ?";
     private static final String DELETE_QUERY = "DELETE FROM reviews WHERE review_id = ?";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM reviews WHERE review_id = ?";
     private static final String FIND_MANY_QUERY = "SELECT * FROM reviews ORDER BY useful DESC " +
@@ -38,7 +38,7 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
                 review.getIsPositive(),
                 review.getUserId(),
                 review.getFilmId(),
-                review.getUseful()
+                0
         );
         review.setReviewId(id);
 
@@ -52,8 +52,6 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
                 UPDATE_QUERY,
                 review.getContent(),
                 review.getIsPositive(),
-                review.getUserId(),
-                review.getFilmId(),
                 review.getUseful(),
                 id
         );
@@ -71,9 +69,8 @@ public class ReviewRepository extends BaseRepository<Review> implements ReviewSt
             log.warn("При запросе данных отзыва возникла ошибка: Отзыв не найден");
             throw new NotFoundException("Отзыв " + id + " не найден");
         }
-        Review review = optionalReview.get();
 
-        return review;
+        return optionalReview.get();
     }
 
     @Override

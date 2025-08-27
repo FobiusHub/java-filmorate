@@ -41,20 +41,22 @@ public class ReviewService {
         return review;
     }
 
-    public void update(Review newReviewData) {
+    public Review update(Review newReviewData) {
         Long newReviewDataId = newReviewData.getReviewId();
+
         long userId = newReviewData.getUserId();
         if (newReviewDataId == null) {
             log.warn("При обновлении данных отзыва возникла ошибка: Необходимо указать ID");
             throw new ValidationException("Необходимо указать ID");
         }
-        if (!reviewStorage.exists(newReviewDataId)) {
-            log.warn("При обновлении данных отзыва возникла ошибка: Отзыв не найден");
-            throw new NotFoundException("Отзыв " + newReviewDataId + " не найден");
-        }
+
         checkUserExist(userId);
-        reviewStorage.update(newReviewData);
+        Review review = reviewStorage.get(newReviewDataId);
+        review.setContent(newReviewData.getContent());
+        review.setIsPositive(newReviewData.getIsPositive());
+        reviewStorage.update(review);
         eventStorage.add(new Event(userId, EventType.REVIEW, Operation.UPDATE, newReviewDataId));
+        return reviewStorage.get(newReviewDataId);
     }
 
     public Review deleteReview(long id) {

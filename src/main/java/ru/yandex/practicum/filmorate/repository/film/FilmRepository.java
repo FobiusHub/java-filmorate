@@ -21,10 +21,11 @@ import java.util.*;
 public class FilmRepository extends BaseRepository<Film> implements FilmStorage {
     private static final String INSERT_QUERY = "INSERT INTO films(name, description, release_date, duration)" +
             "VALUES (?, ?, ?, ?)";
-    private static final String INSERT_LIKES_QUERY = "INSERT INTO likes(film_id, user_id) VALUES (?, ?)";
+    private static final String INSERT_LIKES_QUERY = "MERGE INTO likes(film_id, user_id) VALUES (?, ?)";
     private static final String INSERT_GENRES_QUERY = "INSERT INTO film_genres(film_id, genre_id) VALUES (?, ?)";
     private static final String REMOVE_GENRES_QUERY = "DELETE FROM film_genres WHERE film_id = ?";
-    private static final String INSERT_DIRECTORS_QUERY = "INSERT INTO film_directors(film_id, director_id) VALUES (?, ?)";
+    private static final String INSERT_DIRECTORS_QUERY = "INSERT INTO film_directors(film_id, director_id) " +
+            "VALUES (?, ?)";
     private static final String REMOVE_DIRECTORS_QUERY = "DELETE FROM film_directors WHERE film_id = ?";
     private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?, " +
             "duration = ?, mpa_id = ? WHERE film_id = ?";
@@ -49,7 +50,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             "WHERE fd.director_id = ? ORDER BY EXTRACT(YEAR FROM f.release_date) ASC";
     private static final String FILM_DIRECTORS_QUERY = "SELECT d.* FROM film_directors AS fd JOIN directors AS d " +
             "ON fd.director_id = d.director_id WHERE fd.film_id = ?";
-
     private static final String FIND_RECOMMENDATION_FILMS = "SELECT f.*, COUNT(l_all.user_id) " +
             "FROM films AS f " +
             "JOIN likes AS l ON l.film_id = f.film_id " +
@@ -85,36 +85,25 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             ORDER BY COUNT(l.user_id) DESC\s
             LIMIT ?
             \s""";
-
     private static final String TOP_BY_GENRE = """
-    SELECT f.*, COUNT(l.user_id) as likes_count\s
-    FROM films AS f\s
-    LEFT JOIN likes AS l ON f.film_id = l.film_id
-    JOIN film_genres AS fg ON f.film_id = fg.film_id
-    WHERE fg.genre_id = ?
-    GROUP BY f.film_id\s
-    ORDER BY COUNT(l.user_id) DESC\s
-    LIMIT ?
-   \s""";
-
+             SELECT f.*, COUNT(l.user_id) as likes_count\s
+             FROM films AS f\s
+             LEFT JOIN likes AS l ON f.film_id = l.film_id
+             JOIN film_genres AS fg ON f.film_id = fg.film_id
+             WHERE fg.genre_id = ?
+             GROUP BY f.film_id\s
+             ORDER BY COUNT(l.user_id) DESC\s
+             LIMIT ?
+            \s""";
     private static final String TOP_BY_YEAR = """
-    SELECT f.*, COUNT(l.user_id) as likes_count\s
-    FROM films AS f\s
-    LEFT JOIN likes AS l ON f.film_id = l.film_id
-    WHERE YEAR(f.release_date) = ?
-    GROUP BY f.film_id\s
-    ORDER BY COUNT(l.user_id) DESC\s
-    LIMIT ?
-   \s""";
-
-    private static final String TOP_ALL = """
-    SELECT f.*, COUNT(l.user_id) as likes_count\s
-    FROM films AS f\s
-    LEFT JOIN likes AS l ON f.film_id = l.film_id
-    GROUP BY f.film_id\s
-    ORDER BY COUNT(l.user_id) DESC\s
-    LIMIT ?
-   \s""";
+             SELECT f.*, COUNT(l.user_id) as likes_count\s
+             FROM films AS f\s
+             LEFT JOIN likes AS l ON f.film_id = l.film_id
+             WHERE YEAR(f.release_date) = ?
+             GROUP BY f.film_id\s
+             ORDER BY COUNT(l.user_id) DESC\s
+             LIMIT ?
+            \s""";
 
     private static final String COMMON_FILMS_QUERY =
             "SELECT f.*, COUNT(l.user_id) as likes_count " +
@@ -300,7 +289,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     @Override
     public List<Film> getFilmsSearchByDirector(String query) {
         List<Film> filmsSearchByDirector = findMany(FILMS_SEARCH_BY_DIRECTOR, query);
-//        List<Film> filmsSearchByDirector = findMany(FILMS_SEARCH_BY_DIRECTOR);
         for (Film film : filmsSearchByDirector) {
             setParameters(film);
         }

@@ -107,7 +107,22 @@ public class FilmService {
             default -> throw new ValidationException("Не заполнен тип поиска");
         };
     }
-
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        // Проверяем существование пользователей
+        if (!userStorage.exists(userId)) {
+            log.warn("Пользователь не найден: {}", userId);
+            throw new NotFoundException("Пользователь " + userId + " не найден");
+        }
+        if (!userStorage.exists(friendId)) {
+            log.warn("Пользователь не найден: {}", friendId);
+            throw new NotFoundException("Пользователь " + friendId + " не найден");
+        }
+        if (!userStorage.areFriends(userId,friendId)) {
+            log.warn("Пользователь не найден: {}", friendId);
+            throw new NotFoundException("Пользователь " + friendId + " не найден");
+        }
+        return filmStorage.getCommonFilms(userId, friendId);
+    }
     private void validateFilmData(Film film) {
         LocalDate releaseDate = film.getReleaseDate();
         if (releaseDate.isBefore(LocalDate.of(1895, 12, 28))) {

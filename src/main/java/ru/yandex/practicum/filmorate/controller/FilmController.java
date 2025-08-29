@@ -55,12 +55,13 @@ public class FilmController {
     }
 
     @DeleteMapping("{id}")
-    public Film deleteFilm(@PathVariable long id) {
-        return filmService.deleteFilm(id);
+    public void deleteFilm(@PathVariable long id) {
+        filmService.deleteFilm(id);
     }
 
     @GetMapping("/director/{directorId}")
-    public List<Film> getDirectorFilms(@PathVariable long directorId, @RequestParam String sortBy) {
+    public List<Film> getDirectorFilms(@PathVariable long directorId,
+                                       @RequestParam(defaultValue = "year") String sortBy) {
         return filmService.getDirectorFilms(directorId, sortBy);
     }
 

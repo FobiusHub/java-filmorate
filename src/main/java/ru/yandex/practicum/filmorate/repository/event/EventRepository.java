@@ -21,8 +21,8 @@ public class EventRepository extends BaseRepository<Event> implements EventStora
     }
 
     @Override
-    public Event add(Event event) {
-        long id = insert(
+    public void add(Event event) {
+        insert(
                 INSERT_QUERY,
                 event.getTimestamp(),
                 event.getUserId(),
@@ -30,9 +30,6 @@ public class EventRepository extends BaseRepository<Event> implements EventStora
                 event.getOperation().toString(),
                 event.getEntityId()
         );
-        event.setEventId(id);
-
-        return event;
     }
 
     @Override

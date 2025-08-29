@@ -84,10 +84,12 @@ public class FilmService {
         eventStorage.add(new Event(userId, EventType.LIKE, Operation.REMOVE, filmId));
     }
 
-    public Film deleteFilm(long id) {
-        Film film = filmStorage.get(id);
+    public void deleteFilm(long id) {
+        if (!filmStorage.exists(id)) {
+            log.warn("Не удалось удалить фильм: Фильм не найден");
+            throw new NotFoundException("Фильм " + id + " не найден");
+        }
         filmStorage.delete(id);
-        return film;
     }
 
     public List<Film> getDirectorFilms(long directorId, String sortBy) {
@@ -95,13 +97,11 @@ public class FilmService {
             log.warn("При запросе данных возникла ошибка: Режиссер не найден");
             throw new NotFoundException("Режиссер " + directorId + " не найден");
         }
-        if (sortBy.equals("year")) {
-            return filmStorage.getDirectorFilmsSortedByYear(directorId);
-        } else if (sortBy.equals("likes")) {
-            return filmStorage.getDirectorFilmsSortedByLikes(directorId);
-        } else {
-            throw new ValidationException("Не заполнен тип сортировки");
+        if (!sortBy.equals("year") && !sortBy.equals("likes")) {
+            throw new ValidationException("Не корректно заполнен тип сортировки");
         }
+
+        return filmStorage.getDirectorFilms(directorId, sortBy);
     }
 
     public List<Film> getFilmsSearch(String query, String by) {

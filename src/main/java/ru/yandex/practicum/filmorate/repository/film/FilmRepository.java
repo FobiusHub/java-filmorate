@@ -41,23 +41,20 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private static final String TOP_QUERY = "SELECT f.*, COUNT(l.user_id) FROM films AS f LEFT JOIN likes AS l ON " +
             "f.film_id = l.film_id GROUP BY f.film_id ORDER BY COUNT(l.user_id) DESC LIMIT ?";
     private static final String GET_LIKES_QUERY = "SELECT user_id FROM likes WHERE film_id = ?";
-    private static final String DIRECTOR_FILMS_LIKES_QUERY = "SELECT f.* FROM films AS f " +
+    private static final String DIRECTOR_FILMS_QUERY = "SELECT f.* FROM films AS f " +
             "JOIN film_directors AS fd ON fd.film_id = f.film_id " +
             "LEFT JOIN likes AS l ON f.film_id = l.film_id " +
-            "WHERE fd.director_id = ? GROUP BY f.film_id ORDER BY COUNT(l.user_id) DESC";
-    private static final String DIRECTOR_FILMS_YEAR_QUERY = "SELECT f.* FROM films AS f " +
-            "JOIN film_directors AS fd ON fd.film_id = f.film_id " +
-            "WHERE fd.director_id = ? ORDER BY EXTRACT(YEAR FROM f.release_date) ASC";
+            "WHERE fd.director_id = ? GROUP BY f.film_id ORDER BY ";
     private static final String FILM_DIRECTORS_QUERY = "SELECT d.* FROM film_directors AS fd JOIN directors AS d " +
             "ON fd.director_id = d.director_id WHERE fd.film_id = ?";
-    private static final String FIND_RECOMMENDATION_FILMS = "SELECT f.*, COUNT(l_all.user_id) " +
+    private static final String FIND_RECOMMENDATION_FILMS = "SELECT f.*, COUNT(l_all.user_id) AS like_count " +
             "FROM films AS f " +
             "JOIN likes AS l ON l.film_id = f.film_id " +
             "LEFT JOIN likes AS l_all ON l_all.film_id = f.film_id " +
             "WHERE l.user_id = ? AND f.film_id NOT IN (SELECT film_id FROM likes WHERE user_id = ?) " +
             "GROUP BY f.film_id " +
-            "ORDER BY COUNT(l_all.user_id) DESC " +
-            "LIMIT 5;";
+            "ORDER BY like_count DESC " +
+            "LIMIT 5";
     private static final String FILMS_SEARCH_BY_TITLE = "SELECT f.* FROM films AS f " +
             "LEFT JOIN likes AS l ON f.film_id = l.film_id " +
             "WHERE LOWER(f.name) LIKE LOWER('%' || ? || '%') GROUP BY f.film_id ORDER BY COUNT(l.user_id) DESC";
@@ -74,7 +71,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             "WHERE LOWER(f.name) LIKE LOWER('%' || ? || '%') " +
             "OR LOWER(d.name) LIKE LOWER('%' || ? || '%') " +
             "GROUP BY f.film_id ORDER BY COUNT(l.user_id) DESC";
-
     private static final String TOP_BY_GENRE_AND_YEAR = """
             SELECT f.*, COUNT(l.user_id) as likes_count\s
             FROM films AS f\s
@@ -104,15 +100,13 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
              ORDER BY COUNT(l.user_id) DESC\s
              LIMIT ?
             \s""";
-
-    private static final String COMMON_FILMS_QUERY =
-            "SELECT f.*, COUNT(l.user_id) as likes_count " +
-                    "FROM films f " +
-                    "JOIN likes l1 ON f.film_id = l1.film_id AND l1.user_id = ? " +
-                    "JOIN likes l2 ON f.film_id = l2.film_id AND l2.user_id = ? " +
-                    "LEFT JOIN likes l ON f.film_id = l.film_id " +
-                    "GROUP BY f.film_id " +
-                    "ORDER BY likes_count DESC";
+    private static final String COMMON_FILMS_QUERY = "SELECT f.*, COUNT(l.user_id) as likes_count " +
+            "FROM films f " +
+            "JOIN likes l1 ON f.film_id = l1.film_id AND l1.user_id = ? " +
+            "JOIN likes l2 ON f.film_id = l2.film_id AND l2.user_id = ? " +
+            "LEFT JOIN likes l ON f.film_id = l.film_id " +
+            "GROUP BY f.film_id " +
+            "ORDER BY likes_count DESC";
 
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -244,21 +238,21 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     }
 
     @Override
-    public List<Film> getDirectorFilmsSortedByLikes(long directorId) {
-        List<Film> directorFilmsSortedByLikes = findMany(DIRECTOR_FILMS_LIKES_QUERY, directorId);
-        for (Film film : directorFilmsSortedByLikes) {
-            setParameters(film);
+    public List<Film> getDirectorFilms(long directorId, String sortBy) {
+        String order;
+        if (sortBy.equals("likes")) {
+            order = "COUNT(l.user_id) DESC";
+        } else {
+            order = "EXTRACT(YEAR FROM f.release_date) ASC";
         }
-        return directorFilmsSortedByLikes;
-    }
 
-    @Override
-    public List<Film> getDirectorFilmsSortedByYear(long directorId) {
-        List<Film> directorFilmsSortedByYear = findMany(DIRECTOR_FILMS_YEAR_QUERY, directorId);
-        for (Film film : directorFilmsSortedByYear) {
+        String query = DIRECTOR_FILMS_QUERY + order;
+
+        List<Film> directorFilms = findMany(query, directorId);
+        for (Film film : directorFilms) {
             setParameters(film);
         }
-        return directorFilmsSortedByYear;
+        return directorFilms;
     }
 
     @Override

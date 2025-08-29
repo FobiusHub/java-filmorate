@@ -78,10 +78,9 @@ public class UserService {
         return userStorage.getCommonFriends(userId, otherId);
     }
 
-    public User deleteUser(long id) {
-        User user = userStorage.get(id);
+    public void deleteUser(long id) {
+        checkUserExist(id);
         userStorage.delete(id);
-        return user;
     }
 
     public List<Event> getEvents(long userId) {

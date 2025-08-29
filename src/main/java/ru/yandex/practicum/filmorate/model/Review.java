@@ -20,19 +20,11 @@ public class Review {
     private long useful;
 
     public void like() {
-        if (useful == -1) {
-            useful += 2;
-        } else {
-            useful++;
-        }
+        useful++;
     }
 
     public void dislike() {
-        if (useful == 1) {
-            useful -= 2;
-        } else {
-            useful--;
-        }
+        useful--;
     }
 
     public void removeLike() {

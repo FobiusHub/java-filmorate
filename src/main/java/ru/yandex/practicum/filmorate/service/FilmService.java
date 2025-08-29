@@ -5,8 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.repository.director.DirectorStorage;
+import ru.yandex.practicum.filmorate.repository.event.EventStorage;
 import ru.yandex.practicum.filmorate.repository.film.FilmStorage;
 import ru.yandex.practicum.filmorate.repository.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.repository.mpa.MpaStorage;
@@ -24,6 +25,8 @@ public class FilmService {
     private final UserStorage userStorage;
     private final GenreStorage genreStorage;
     private final MpaStorage mpaStorage;
+    private final EventStorage eventStorage;
+    private final DirectorStorage directorStorage;
 
     public Film create(Film film) {
         validateFilmData(film);
@@ -65,19 +68,75 @@ public class FilmService {
             throw new NotFoundException("Фильм " + filmId + " не найден");
         }
         filmStorage.like(filmId, userId);
+        eventStorage.add(new Event(userId, EventType.LIKE, Operation.ADD, filmId));
     }
 
     public void removeLike(long filmId, long userId) {
-        userStorage.exists(userId);
+        if (!userStorage.exists(userId)) {
+            log.warn("Не удалось удалить лайк: Пользователь не найден");
+            throw new NotFoundException("Пользователь " + userId + " не найден");
+        }
         if (!filmStorage.exists(filmId)) {
             log.warn("Не удалось удалить лайк: Фильм не найден");
             throw new NotFoundException("Фильм " + filmId + " не найден");
         }
-        filmStorage.get(filmId).removeLike(userId);
+        filmStorage.removeLike(filmId, userId);
+        eventStorage.add(new Event(userId, EventType.LIKE, Operation.REMOVE, filmId));
     }
 
-    public List<Film> getTopFilms(long size) {
-        return filmStorage.getTopFilms(size);
+    public void deleteFilm(long id) {
+        if (!filmStorage.exists(id)) {
+            log.warn("Не удалось удалить фильм: Фильм не найден");
+            throw new NotFoundException("Фильм " + id + " не найден");
+        }
+        filmStorage.delete(id);
+    }
+
+    public List<Film> getDirectorFilms(long directorId, String sortBy) {
+        if (!directorStorage.exists(directorId)) {
+            log.warn("При запросе данных возникла ошибка: Режиссер не найден");
+            throw new NotFoundException("Режиссер " + directorId + " не найден");
+        }
+        if (!sortBy.equals("year") && !sortBy.equals("likes")) {
+            throw new ValidationException("Не корректно заполнен тип сортировки");
+        }
+
+        return filmStorage.getDirectorFilms(directorId, sortBy);
+    }
+
+    public List<Film> getFilmsSearch(String query, String by) {
+        return switch (by) {
+            case "title" -> filmStorage.getFilmsSearchByTitle(query);
+            case "director" -> filmStorage.getFilmsSearchByDirector(query);
+            case "director,title", "title,director" -> filmStorage.getFilmsSearchByDirectorOrTitle(query);
+            default -> throw new ValidationException("Не заполнен тип поиска");
+        };
+    }
+
+    public List<Film> getTopFilms(long count, Long genreId, Integer year) {
+        if (genreId != null && year != null) {
+            return filmStorage.getTopFilmsByGenreAndYear(count, genreId, year);
+        } else if (genreId != null) {
+            return filmStorage.getTopFilmsByGenre(count, genreId);
+        } else if (year != null) {
+            return filmStorage.getTopFilmsByYear(count, year);
+        } else {
+            return filmStorage.getTopFilms(count);
+        }
+    }
+
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        // Проверяем существование пользователей
+        if (!userStorage.exists(userId)) {
+            log.warn("Пользователь не найден: {}", userId);
+            throw new NotFoundException("Пользователь " + userId + " не найден");
+        }
+        if (!userStorage.exists(friendId)) {
+            log.warn("Пользователь не найден: {}", friendId);
+            throw new NotFoundException("Пользователь " + friendId + " не найден");
+        }
+
+        return filmStorage.getCommonFilms(userId, friendId);
     }
 
     private void validateFilmData(Film film) {
@@ -92,7 +151,6 @@ public class FilmService {
         Set<Genre> filmGenres = film.getGenres();
         if (filmGenres != null && !filmGenres.isEmpty()) {
             for (Genre genre : filmGenres) {
-                //здесь происходит проверка наличия жанра в базе данных
                 genreStorage.get(genre.getId());
             }
         }

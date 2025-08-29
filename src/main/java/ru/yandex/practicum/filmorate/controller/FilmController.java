@@ -24,7 +24,7 @@ public class FilmController {
     @PutMapping
     public Film update(@Valid @RequestBody Film newFilmData) {
         filmService.update(newFilmData);
-        return  newFilmData;
+        return newFilmData;
     }
 
     @GetMapping
@@ -48,7 +48,31 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public List<Film> getTopFilms(@RequestParam(defaultValue = "10") long count) {
-        return filmService.getTopFilms(count);
+    public List<Film> getTopFilms(@RequestParam(defaultValue = "10") long count,
+            @RequestParam(required = false) Long genreId,
+            @RequestParam(required = false) Integer year) {
+        return filmService.getTopFilms(count, genreId, year);
+    }
+
+    @DeleteMapping("{id}")
+    public void deleteFilm(@PathVariable long id) {
+        filmService.deleteFilm(id);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<Film> getDirectorFilms(@PathVariable long directorId,
+                                       @RequestParam(defaultValue = "year") String sortBy) {
+        return filmService.getDirectorFilms(directorId, sortBy);
+    }
+
+    @GetMapping("/search")
+    public List<Film> getFilmsSearch(@RequestParam String query, @RequestParam String by) {
+        return filmService.getFilmsSearch(query, by);
+    }
+
+    @GetMapping("/common")
+    public List<Film> getCommonFilms(@RequestParam long userId,
+                                     @RequestParam long friendId) {
+        return filmService.getCommonFilms(userId, friendId);
     }
 }

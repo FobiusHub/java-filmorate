@@ -10,6 +10,7 @@ import org.hibernate.validator.constraints.Length;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Data
@@ -27,9 +28,10 @@ public class Film {
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     private long duration;
     private final Set<Long> likes = new HashSet<>();
-
-    private final Set<Genre> genres = new HashSet<>();
+    private final LinkedHashSet<Genre> genres = new LinkedHashSet<>();
     private Mpa mpa;
+
+    private Set<Director> directors = new HashSet<>();
 
     public void like(long userId) {
         likes.add(userId);
@@ -39,11 +41,11 @@ public class Film {
         likes.remove(userId);
     }
 
-    public int getLikesCount() {
-        return likes.size();
-    }
-
     public void addGenre(Genre genre) {
         genres.add(genre);
+    }
+
+    public void addDirector(Director director) {
+        directors.add(director);
     }
 }
